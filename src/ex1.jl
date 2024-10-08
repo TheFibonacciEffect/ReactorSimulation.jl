@@ -6,16 +6,19 @@ using Plots
 Σt = Σa + Σs
 # do these units make sense?
 S = 1000u"cm^-2*s^-1"
-Sleft = S/2
+Sleft = S
 x0 = 10u"cm"
-n(x) = (Sleft
-        *exp(-Σa*x) # not absorbed
-        * exp(-0.5*Σs*x) # scattering propability
-            )  # half of the particles go to the left
-nx0 = n(x0)
-println("n(x0) = $nx0")
-n0 = n(0u"cm")
-println("n(0) = $(n0)")
-x = (0:0.1:20)u"cm"
-plot(n,x, xlabel="l", ylabel="Neutron Flux Density")
-
+D = 1/(3 * ( Σs + Σa))
+extrapolated_length = 2/3(Σs + Σa)
+a = 2x0  + 2*extrapolated_length
+L = sqrt(1/
+            (3(Σs + Σa)*Σa)
+            )
+Φ(x) = (
+    Sleft * L / 2 / D * sinh( ( (a-2 * abs(x))/(2L)))/(cosh(a/2/L))
+)
+x = (0:0.1:10)u"cm"
+plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density")
+Φ(1.05u"cm")
+Φ(0u"cm")
+Φ(x0)
