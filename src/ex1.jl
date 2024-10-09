@@ -10,6 +10,10 @@ S = 1000u"cm^-2*s^-1"
 L = sqrt(1/(3(Σs + Σa)*Σa))
 D = 1/(3 * ( Σs + Σa))
 
+# numerical Parameters
+dx = 0.1u"cm"
+n = x0/ dx |> Int
+
 # analytical solution
 function slab_analytical(x0,S)
     extrapolated_length = 2/3(Σs + Σa)
@@ -31,16 +35,25 @@ plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density")
 
 using SparseArrays
 using IterativeSolvers
-dx = 0.1u"cm"
-n = x0/ dx |> Int
+function calculate_boundary(dx)
+    BCp = 1/8 + D/(2dx)
+    BCm = 1/8 - D/(2dx)
+    S_array = - S/(2BCm*dx^2).*[ 1. ;zeros(n-1)]
+    BC_left = -BCm/BCp
+    BC_right = -BCp/BCm
+    boundary = 1/dx^2 * [BC_left; zeros(n-2); BC_right]
+    return S_array,boundary
+end
+
+calculate_boundary(dx)
+
 # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
 laplace = spdiagm(-1 => ones(n-1), 0 => -2 * ones(n-1), 1 => ones(n-1))/dx^2
-S = zeros(n)
-collision = - 1/L*spdiagm(0=> ones(n))
-streaming =  D* laplace
-C = S/2
-BC_right = 1/(2*dx/4D+1)
-boundary = [BC_left; zeros(n-2); 1/(2*BC_right-1)]
-phi = cg(streaming + collision, S)
+streaming =  laplace
+# boundary condition
+Q, boundary = calculate_boundary(dx)
+collision = - 1/L^2*spdiagm(0=> ones(n))
+A = streaming + collision + spdiagm(0 => boundary)
+phi = cg(A, Q)
 plot(phi)
 
