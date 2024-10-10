@@ -11,7 +11,7 @@ L = sqrt(1/(3(Σs + Σa)*Σa))
 D = 1/(3 * ( Σs + Σa))
 
 # numerical Parameters
-dx = 0.1u"cm"
+dx = 2u"cm"
 n = x0/ dx |> Int
 
 # analytical solution
@@ -35,7 +35,7 @@ plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density")
 
 using SparseArrays
 using IterativeSolvers
-function calculate_boundary(dx)
+function calculate_boundary(dx,n)
     BCp = 1/8 + D/(2dx)
     BCm = 1/8 - D/(2dx)
     S_array = - S/(2BCm*dx^2).*[ 1. ;zeros(n-1)]
@@ -45,15 +45,16 @@ function calculate_boundary(dx)
     return S_array,boundary
 end
 
-calculate_boundary(dx)
+calculate_boundary(dx,2)
 
 # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-laplace = spdiagm(-1 => ones(n-1), 0 => -2 * ones(n-1), 1 => ones(n-1))/dx^2
+laplace = spdiagm(-1 => ones(n-1), 0 => -2 * ones(n), 1 => ones(n-1))/dx^2
 streaming =  laplace
 # boundary condition
 Q, boundary = calculate_boundary(dx)
 collision = - 1/L^2*spdiagm(0=> ones(n))
 A = streaming + collision + spdiagm(0 => boundary)
-phi = cg(A, Q)
+phi = cg(ustrip(A), ustrip(Q))
+unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
 plot(phi)
 
