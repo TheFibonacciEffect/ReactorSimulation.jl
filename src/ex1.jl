@@ -25,12 +25,12 @@ end
 using SparseArrays
 using IterativeSolvers
 function calculate_boundary(S,dx,n)
-    @show BCp = 1/8 + D/(2dx)
-    @show BCm = 1/8 - D/(2dx)
-    S_array = - S/(2BCm*dx^2).*[ 1. ;zeros(n-1)]
+    BCp = 1/8 + D/(2dx)
+    BCm = 1/8 - D/(2dx)
+    S_array = -S*dx/(2*D).*[ 1. ;zeros(n-1)]
     BC_left = -BCm/BCp
     BC_right = -BCp/BCm
-    boundary = 1/dx^2 * [BC_left; zeros(n-2); BC_right]
+    boundary = 1/dx^2 * [1; zeros(n-2); (2*D/((1/4+D/dx)*dx)-1)]
     return S_array,boundary
 end
 
@@ -47,18 +47,21 @@ function main(n)
 
     plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density")
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-    laplace = spdiagm(-1 => ones(n-1), 0 => -2 * ones(n), 1 => ones(n-1))/dx^2
+    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     streaming =  laplace
     # boundary condition
     Q, boundary = calculate_boundary(S,dx,n)
     collision = - 1/L^2*spdiagm(0=> ones(n))
     A = streaming + collision + spdiagm(0 => boundary)
     phi = cg(ustrip(A), ustrip(Q))
-    unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
+    phi = phi/dx^2 |> ustrip
+    @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
     plot!( range(0u"cm", x0,n) ,phi)
 end
 main(100)
+main(200)
 main(1000)
+main(2000)
 Q,b = calculate_boundary(S,1u"cm", 10)
 @show Q
 @show b
