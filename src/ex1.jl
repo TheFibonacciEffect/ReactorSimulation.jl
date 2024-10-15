@@ -27,7 +27,7 @@ using IterativeSolvers
 function calculate_boundary(S,dx,n)
     BCp = 1/8 + D/(2dx)
     BCm = 1/8 - D/(2dx)
-    S_array = -S*dx/(2*D).*[ 1. ;zeros(n-1)]
+    S_array = -S*dx/(2*D).*[ 1. ;zeros(n-1)] ./ dx^2
     BC_left = -BCm/BCp
     BC_right = -BCp/BCm
     boundary = 1/dx^2 * [1; zeros(n-2); (2*D/((1/4+D/dx)*dx)-1)]
@@ -52,9 +52,9 @@ function main(n)
     # boundary condition
     Q, boundary = calculate_boundary(S,dx,n)
     collision = - 1/L^2*spdiagm(0=> ones(n))
-    A = streaming + collision + spdiagm(0 => boundary)
+    A = (streaming + collision + spdiagm(0 => boundary))
     phi = cg(ustrip(A), ustrip(Q))
-    phi = phi/dx^2 |> ustrip
+    phi = phi
     @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
     plot!( range(0u"cm", x0,n) ,phi)
 end
