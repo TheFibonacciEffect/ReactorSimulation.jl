@@ -34,19 +34,14 @@ function calculate_boundary(S,dx,n)
     return S_array,boundary
 end
 
-# calculate_boundary(dx,2)
-
-function main(n)
+function slab_reactor(n; save = false, do_plot=false)
     # numerical Parameters
     dx = x0/n
     x =  range(0u"cm", x0,n)
     Φ = slab_analytical(x0,S)
-    @show Φ(1.05u"cm")
-    @show Φ(0u"cm")
-    @show Φ(x0)
-
-    plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
-    savefig("docs/figs/ex1_analytical.png")
+    # @show Φ(1.05u"cm")
+    # @show Φ(0u"cm")
+    # @show Φ(x0)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     streaming =  laplace
@@ -56,15 +51,26 @@ function main(n)
     A = (streaming + collision + spdiagm(0 => boundary))
     phi = cg(ustrip(A), ustrip(Q))
     phi = phi*unit(eltype(Q))/unit(eltype(A))
-    @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
-    plot(x ,phi .- Φ.(x), legend=false)
-    xlabel!("l")
-    ylabel!("Error")
-    title!("Difference between Numerical and Analytical Solution")
-    savefig("docs/figs/ex1_err_$(n).png")
-    # return phi
+    # @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
+    if do_plot
+        plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
+        if save savefig("docs/figs/ex1_analytical.png") end
+        p = plot(x ,phi .- Φ.(x), legend=false)
+        xlabel!("l")
+        ylabel!("Error")
+        title!("Difference between Numerical and Analytical Solution")
+        if save savefig("docs/figs/ex1_err_$(n).png") end
+        return p
+    end
+    return maximum(abs.(phi .- Φ.(x)))
 end
-main(100)
+
+function plot_error(n)
+    err = slab_reactor.(n; save = false)
+    plot(n,err, ylabel="max err", xlabel="x")
+end
+plot_error(100:1000:10000)
+savefig("maxerr.png")
 Q,b = calculate_boundary(S,1u"cm", 10)
 @show Q
 @show b
