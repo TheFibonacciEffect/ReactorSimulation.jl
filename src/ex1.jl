@@ -34,14 +34,11 @@ function calculate_boundary(S,dx,n)
     return S_array,boundary
 end
 
-function slab_reactor(n; save = false, do_plot=false)
+function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
     dx = x0/n
     x =  range(0u"cm", x0,n)
     Φ = slab_analytical(x0,S)
-    # @show Φ(1.05u"cm")
-    # @show Φ(0u"cm")
-    # @show Φ(x0)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     streaming =  laplace
@@ -51,7 +48,27 @@ function slab_reactor(n; save = false, do_plot=false)
     A = (streaming + collision + spdiagm(0 => boundary))
     phi = cg(ustrip(A), ustrip(Q))
     phi = phi*unit(eltype(Q))/unit(eltype(A))
-    # @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
+    if verbose
+        @show Φ(1.05u"cm")
+        @show Φ(0u"cm")
+        @show Φ(x0)
+        @show A[5,5]
+        @show A[5,6]
+        @show A[5,4]
+        @show A[4,5]
+        @show A[6,5]
+        println("boundary conditions")
+        @show A[1,1]
+        @show A[1,2]
+        @show A[2,1]
+        @show A[end,end]
+        @show A[end-1,end]
+        @show A[end, end-1]
+        @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
+        println("Question 3")
+        @show phi[1]
+        @show phi[end]
+    end
     if do_plot
         plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
         if save savefig("docs/figs/ex1_analytical.png") end
@@ -62,15 +79,22 @@ function slab_reactor(n; save = false, do_plot=false)
         if save savefig("docs/figs/ex1_err_$(n).png") end
         return p
     end
-    return maximum(abs.(phi .- Φ.(x)))
+    if max return maximum(abs.(phi .- Φ.(x))) end
+    return abs(sum(phi .- Φ.(x)))
 end
 
 function plot_error(n)
     err = slab_reactor.(n; save = false)
-    plot(n,err, ylabel="max err", xlabel="x")
+    plot(n,err, ylabel="sum err", xlabel="number of grid points")
+    savefig("./docs/figs/sum_errors.png")
+    err = slab_reactor.(n; save = false, max=true)
+    plot(n,err, ylabel="max err", xlabel="number of grid points")
+    savefig("./docs/figs/max_errors.png")
 end
-plot_error(100:1000:10000)
-savefig("maxerr.png")
+
+slab_reactor(100; verbose=true)
+plot_error(100:100:10000)
+
 Q,b = calculate_boundary(S,1u"cm", 10)
 @show Q
 @show b

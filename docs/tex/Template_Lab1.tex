@@ -75,32 +75,38 @@ Flux value at $0^+$:12276.897875372839  $cm^-2 s^-1$ \\
 
 Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i+1},\ \mathrm{\Phi}_{i-1}$ at any point within the material:
 \begin{equation}
-    0+0=?
+    \frac{1}{dx^2}(\Phi_{i-1} - 2 \Phi_{i} + \Phi_{i+1}) - \frac{1}{L} \Phi_{i} = 0
 \end{equation}
 
 Coefficients of the matrix A (4 significant digits), for a mesh size of 0.1cm:\\
-Coef $A_{i,i}$: \\
-Coef $A_{i-1,i}$: \\
-Coef $A_{i+1,i}$: \\
+Coef ${} A_{i,i} = -200.2411 cm^{-2}$: \\
+Coef $A_{i-1,i} = 99.9999 cm^{-2}$: \\
+Coef $A_{i+1,i} = 99.9999 cm^{-2}$: \\
 
 Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i-1/2},\ \mathrm{\Phi}_{i+1/2}$, \\
 at the source:
-\begin{equation}
-    0+0=?
-\end{equation}
+\begin{align}
+J_{x}^{+}\left( x_{n+\frac{1}{2}} \right) &= \frac{S}{2}  = \frac{1}{4}\Phi\left( x_{n+\frac{1}{2}} \right) - \frac{D}{2} \frac{d}{dx}\Phi  \\
+        & = \frac{\Phi_{n+\frac{1}{2}}}{4}-\frac{D}{2} \frac{\Phi_{n+\frac{1}{2}}-\Phi_{n}}{\frac{dx}{2}} \\
+\end{align}
 at the RHS of the problem:
-\begin{equation}
-    0+0=?
-\end{equation}
+\begin{align}
+    J_{x}^{-}\left( x_{n+\frac{1}{2}} \right) &= 0  = \frac{1}{4}\Phi\left( x_{n+\frac{1}{2}} \right) + \frac{D}{2} \frac{d}{dx}\Phi  \\
+        & = \frac{\Phi_{n+\frac{1}{2}}}{4}+\frac{D}{2} \frac{\Phi_{n+\frac{1}{2}}-\Phi_{n}}{\frac{dx}{2}} \\
+\end{align}
 Associated coefficients of the matrix A (4 significant digits), for a mesh size of 0.1cm:
 at the source:
-Coef $A_{1,i}$: \\
-Coef $A_{2,i}$: \\
-Coef $A_{i+1,i}$: \\
-at the RHS:
-Coef $A_{1,i}$: \\
-Coef $A_{2,i}$: \\
-Coef $A_{i+1,i}$: \\
+\begin{align}
+    A_{1, 1}     &= -100.2412 cm^{-2}\\
+    A_{1, 2}     &=  100.0000 cm^{-2}\\
+    A_{2, 1}     &=  100.0000 cm^{-2}
+\end{align}
+at teh right hand side:
+\begin{align}
+    A_{n, n}     &= -146.5724 cm^{-2}\\
+    A_{n - 1, n} &=  100.0000 cm^{-2}\\
+    A_{n, n - 1} &=  100.0000 cm^{-2}
+\end{align}
 
 \section{Question \#3}
 \begin{figure}[h]
@@ -110,17 +116,25 @@ Coef $A_{i+1,i}$: \\
 \end{figure}
 
 Flux values from the numerical solver at the following locations (4 significant digits):\\
-Flux value at $x_0$: \\
-Flux value at $0^+$: \\
+Flux value at $0^+ = 11979.0980 cm^{-2} s^{-1}$: \\
+Flux value at $x_0 = 17.732 cm^{-2} s^{-1}$: \\
+
 
 \begin{figure}[h]
-%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+\includegraphics[width=7cm]{../figs/sum_errors.png}
 \centering
 \caption{Evolution with mesh size of the absolute error of $\Phi(x_0)$.}
-\label{err}
+\label{sumerr}
+\end{figure}
+\begin{figure}[h]
+\includegraphics[width=7cm]{../figs/max_errors.png}
+\centering
+\caption{Evolution with mesh size of the absolute error of $\Phi(x_0)$.}
+\label{maxerr}
 \end{figure}
 
-Add two sentences describing what you see in \ref{err} and a possible explanation 
+% Add two sentences describing what you see in \ref{sumerr} and a possible explanation 
+In figure \ref{sumerr} you can see the sum of the errors and in \ref{maxerr} you can see the maximum deviation from the reference solution.
 
 
 %%%%%%%
