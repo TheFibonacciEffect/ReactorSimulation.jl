@@ -64,8 +64,8 @@
 \caption{Analytical Solution for the neutron flux as a function of depth.}
 \end{figure}
 Flux values at the following locations (4 significant digits):\\
-Flux value at $x_0$: 13.589586060473522 $cm^-2 s^-1$\\
-Flux value at $0^+$:12276.897875372839  $cm^-2 s^-1$ \\
+Flux value at $x_0$: 13.5896 $cm^{-2} s^-1$\\
+Flux value at $0^+$:12276.897875372839  $cm^{-2} s^-1$ \\
 
 % Φ(1.05 * u"cm") = 7329.878134314118 cm^-2 s^-1
 % Φ(0 * u"cm") = 12276.897875372839 cm^-2 s^-1
@@ -73,9 +73,29 @@ Flux value at $0^+$:12276.897875372839  $cm^-2 s^-1$ \\
 
 \section{Question \#2}
 
+The differential Equation is given as
+\begin{equation}
+    D \frac{ d^2 }{ dx^2 } \Phi  -  \Sigma_{a}\Phi = 0
+\end{equation}
+
+Right hand side
+$$
+\frac{1}{dx^2} ( D \phi_{n-1} - (D + dx BC_{n} + \Sigma_{a} dx^2)\phi_{n}) = 0
+$$
+Left hand side:
+$$
+\frac{1}{dx^2}(-(D + \Sigma_{a} dx^2) \phi_{1} + D\phi_{2}) = -\frac{S}{2dx}
+$$
+Middle:
+$$
+\frac{D}{dx^2}(\Phi_{i-1} - 2 \Phi_{i} + \Phi_{i+1}) - \Sigma_{a} \Phi_{i} = 0
+$$
+
+
 Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i+1},\ \mathrm{\Phi}_{i-1}$ at any point within the material:
 \begin{equation}
-    \frac{1}{dx^2}(\Phi_{i-1} - 2 \Phi_{i} + \Phi_{i+1}) - \frac{1}{L} \Phi_{i} = 0
+    % \frac{1}{dx^2}(\Phi_{i-1} - 2 \Phi_{i} + \Phi_{i+1}) - \frac{1}{L} \Phi_{i} = 0
+    D \frac{ d^2 }{ dx^2 } \Phi  -  \Sigma_{a}\Phi = 0
 \end{equation}
 
 Coefficients of the matrix A (4 significant digits), for a mesh size of 0.1cm:\\
@@ -86,9 +106,7 @@ Coef $A_{i+1,i} = 99.9999 cm^{-2}$: \\
 Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i-1/2},\ \mathrm{\Phi}_{i+1/2}$, \\
 at the source:
 \begin{align}
-J_{x}^{+}\left( x_{n+\frac{1}{2}} \right) &= \frac{S}{2}  = \frac{1}{4}\Phi\left( x_{n+\frac{1}{2}} \right) - \frac{D}{2} \frac{d}{dx}\Phi  \\
-        & = \frac{\Phi_{n+\frac{1}{2}}}{4}-\frac{D}{2} \frac{\Phi_{n+\frac{1}{2}}-\Phi_{n}}{\frac{dx}{2}} \\
-\end{align}
+--\end{align}
 at the RHS of the problem:
 \begin{align}
     J_{x}^{-}\left( x_{n+\frac{1}{2}} \right) &= 0  = \frac{1}{4}\Phi\left( x_{n+\frac{1}{2}} \right) + \frac{D}{2} \frac{d}{dx}\Phi  \\

@@ -27,11 +27,14 @@ using IterativeSolvers
 function calculate_boundary(S,dx,n)
     BCp = 1/8 + D/(2dx)
     BCm = 1/8 - D/(2dx)
-    S_array = -S*dx/(2*D).*[ 1. ;zeros(n-1)] ./ dx^2
+    S_array = -S/2/dx.*[ 1. ;zeros(n-1)]
     BC_left = -BCm/BCp
     BC_right = -BCp/BCm
-    boundary = 1/dx^2 * [1; zeros(n-2); (2*D/((1/4+D/dx)*dx)-1)]
-    return S_array,boundary
+    BC(i) = 1/(2 * (dx / (4D) + 1))
+    # boundary = 1/dx^2 * [D; zeros(n-2); (2*D/((1/4+D/dx)*dx)-1)]
+    left = - D + Σa*dx^2
+    right = - (D + dx * BC(n) + Σa * dx^2)
+    return left/dx^2, right/dx^2, S_array
 end
 
 function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
@@ -40,12 +43,14 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     x =  range(0u"cm", x0,n)
     Φ = slab_analytical(x0,S)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     streaming =  laplace
     # boundary condition
-    Q, boundary = calculate_boundary(S,dx,n)
-    collision = - 1/L^2*spdiagm(0=> ones(n))
-    A = (streaming + collision + spdiagm(0 => boundary))
+    left, right, Q = calculate_boundary(S,dx,n)
+    collision = - spdiagm(0=> ones(n)) * Σa
+    A = streaming + collision
+    A[1,1] = left
+    A[end,end] = right
     phi = cg(ustrip(A), ustrip(Q))
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
@@ -68,16 +73,22 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
         println("Question 3")
         @show phi[1]
         @show phi[end]
+        @show phi[Int(1.05 ÷ ustrip(dx))]
+        @show phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05u"cm")
     end
     if do_plot
         plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
         if save savefig("docs/figs/ex1_analytical.png") end
-        p = plot(x ,phi .- Φ.(x), legend=false)
+        p_err = plot(x ,phi .- Φ.(x), legend=false)
         xlabel!("l")
         ylabel!("Error")
-        title!("Difference between Numerical and Analytical Solution")
+        # title!("Difference between Numerical and Analytical Solution")
+        p_rel = plot(x ,(phi .- Φ.(x)) ./ Φ.(x), legend=false)
+        xlabel!("l")
+        ylabel!("Relative Error")
+        # title!("Difference between Numerical and Analytical Solution")
         if save savefig("docs/figs/ex1_err_$(n).png") end
-        return p
+        return plot(p_err, p_rel)
     end
     if max return maximum(abs.(phi .- Φ.(x))) end
     return abs(sum(phi .- Φ.(x)))
@@ -92,9 +103,9 @@ function plot_error(n)
     savefig("./docs/figs/max_errors.png")
 end
 
-slab_reactor(100; verbose=true)
-plot_error(100:100:10000)
+slab_reactor(100; verbose=true, do_plot=true)
+plot_error(100:1000:10000)
 
-Q,b = calculate_boundary(S,1u"cm", 10)
-@show Q
-@show b
+calculate_boundary(S,1u"cm", 10)
+# @show Q
+# @show b
