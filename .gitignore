@@ -4,6 +4,7 @@
 /Manifest.toml
 /docs/Manifest.toml
 /docs/build/
-/docs/foreign
+/docs/references
 /docs/tex
 docs/figs
+/src/examples

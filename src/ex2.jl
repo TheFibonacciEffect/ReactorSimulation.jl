@@ -38,7 +38,7 @@ end
 function jacobi_iteration!(M,F,k,P)
     eps = 0.01
     err = Inf
-    maxitter = 1000
+    maxitter = 100
     i = 0
     while abs(err) > eps && i < maxitter
         MP = 1/k * F * P
