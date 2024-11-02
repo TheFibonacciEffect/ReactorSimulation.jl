@@ -11,3 +11,7 @@ Download Julia using
 `curl -fsSL https://install.julialang.org | sh`
 (on Linux), otherwise download julia from https://julialang.org/downloads/
 
+Then start julia in the same directory as the `Project.toml` is located.
+Start julia using `julia`.
+Go into package mode by pressing the `]` key. Activate the local environment by typing `activate .`, now install all required dependancies by typing `instantiate`. 
+Afterwards you can run the files using for example `julia --project=. ./src/ex1.jl`.
