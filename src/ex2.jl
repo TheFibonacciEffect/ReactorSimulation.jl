@@ -14,6 +14,18 @@ D = 1/(3 * ( Σs + Σa))
 νΣf = 0.015
 a = 20
 b = 10
+
+function apply_boundary_conditions!(M, D, dx, n)
+    # Modify left boundary (J^-(0))
+    M[1, 1] = 1/4 - D / dx
+    M[1, 2] = D / dx
+
+    # Modify right boundary (J^+(0))
+    M[n, n] = 1/4 - D / dx
+    M[n, n-1] = D / dx
+end
+
+
 function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
     l = a+2b
@@ -25,6 +37,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     # streaming[1,1] = 
     collision = - spdiagm(0=> ones(n)) * Σa
     M = streaming + collision
+    apply_boundary_conditions!(M,D,dx,n)
     moderator_length = n * b/l |> round |> Int
     reactor_length = n-2*moderator_length
     fission = νΣf * spdiagm(0 => [zeros(moderator_length) ; ones(reactor_length); zeros(moderator_length)])
