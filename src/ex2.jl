@@ -26,6 +26,11 @@ function apply_boundary_conditions!(M, D, dx, n)
 end
 
 
+    
+function check_boundary(P,dx)
+    return P[2:end] - D/dx * diff(P) , P[2:end] + D/dx * diff(P)
+end
+
 function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
     l = a+2b
@@ -46,6 +51,9 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     k = 1
     P = ones(n)
     jacobi_iteration!(M,F,k, P)
+    Pl, Pr = check_boundary(P,dx)
+    plot(Pl)
+    plot!(Pr)
 end
 
 function jacobi_iteration!(M,F,k,P)
@@ -59,7 +67,7 @@ function jacobi_iteration!(M,F,k,P)
         @infiltrate
         k1 = k*(norm(F*P1)/norm(F*P))^2
         @show err = (k1 - k)/k1
-        P = P1
+        P .= P1
         @show k = k1
         i += 1
     end
@@ -67,3 +75,4 @@ function jacobi_iteration!(M,F,k,P)
 end
 
 reactor_reflector(0.1)
+reactor_reflector(0.01)
