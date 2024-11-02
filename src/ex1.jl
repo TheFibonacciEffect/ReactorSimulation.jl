@@ -52,6 +52,8 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     A[1,1] = left
     A[end,end] = right
     phi = cg(ustrip(A), ustrip(Q))
+    # phi = bicgstabl(ustrip(A), ustrip(Q))
+    # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
         @show Φ(1.05u"cm")
