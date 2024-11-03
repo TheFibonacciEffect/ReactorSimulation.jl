@@ -2,10 +2,10 @@ using Unitful
 using Plots
 
 # Phyical Parameters
-x0 = 10u"cm"
-S = 1000u"cm^-2*s^-1"
-Σa = 0.02u"cm^-1"
-Σs = 4u"cm^-1"
+x0 = 10
+S = 1000
+Σa = 0.02
+Σs = 4
 Σt = Σa + Σs
 L = sqrt(1/(3(Σs + Σa)*Σa))
 D = 1/(3 * ( Σs + Σa))
@@ -24,20 +24,37 @@ end
 
 using SparseArrays
 using IterativeSolvers
-function apply_boundary_conditions!(M,S,dx,n)
-    Q1 = -S/dx^2
-    Q = zeros(n)*unit(Q1)
-    Q[1] = Q1
-    # Modify right boundary (J^+(0))
-    M[n, n] = 1/4 - D / dx
-    M[n, n-1] = D / dx
+
+using SparseArrays
+
+function apply_boundary_conditions!(A, S, dx, n)
+    # Left boundary condition at x = 0
+    # D * d^2/dx^2 ϕ(0) - Σ_a ϕ(0) = S / 2
+    # Modify the first row of A to reflect this boundary condition
+    D = dx^2  # assuming D has been incorporated in laplace scaling
+    Σ_a = -A[1, 1]  # assuming A has Σ_a on the diagonal originally
+    
+    A[1, 1] = -2 * D / dx^2 - Σ_a
+    A[1, 2] = D / dx^2
+
+    # Right boundary condition at x = n (Last node)
+    # J⁺(0) = ϕ(0)/4 - D * dϕ/dx |_{x=0} = 0
+    # Set up the right flux condition at the last row in A
+    A[n, n-1] = -D / dx
+    A[n, n] = 1 / 4 + D / dx
+
+    # Adjust Q vector to include the source term
+    Q = zeros(n)
+    Q[1] = S / 2/dx
+
     return Q
 end
+
 
 function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
     dx = x0/n
-    x =  range(0u"cm", x0,n)
+    x =  range(0,x0)
     Φ = slab_analytical(x0,S)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
@@ -52,8 +69,8 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
-        @show Φ(1.05u"cm")
-        @show Φ(0u"cm")
+        @show Φ(1.05)
+        @show Φ(0)
         @show Φ(x0)
         @show A[5,5]
         @show A[5,6]
@@ -72,7 +89,7 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
         @show phi[1]
         @show phi[end]
         @show phi[Int(1.05 ÷ ustrip(dx))]
-        @show phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05u"cm")
+        @show phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05)
     end
     if do_plot
         plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
@@ -104,6 +121,5 @@ end
 slab_reactor(100; verbose=true, do_plot=true)
 plot_error(100:1000:10000)
 
-calculate_boundary(S,1u"cm", 10)
 # @show Q
 # @show b
