@@ -24,17 +24,14 @@ end
 
 using SparseArrays
 using IterativeSolvers
-function calculate_boundary(S,dx,n)
-    BCp = 1/8 + D/(2dx)
-    BCm = 1/8 - D/(2dx)
-    S_array = -S/2/dx.*[ 1. ;zeros(n-1)]
-    BC_left = -BCm/BCp
-    BC_right = -BCp/BCm
-    BC(i) = 1/(2 * (dx / (4D) + 1))
-    # boundary = 1/dx^2 * [D; zeros(n-2); (2*D/((1/4+D/dx)*dx)-1)]
-    left = - D + Σa*dx^2
-    right = - (D + dx * BC(n) + Σa * dx^2)
-    return left/dx^2, right/dx^2, S_array
+function apply_boundary_conditions!(M,S,dx,n)
+    Q1 = -S/dx^2
+    Q = zeros(n)*unit(Q1)
+    Q[1] = Q1
+    # Modify right boundary (J^+(0))
+    M[n, n] = 1/4 - D / dx
+    M[n, n-1] = D / dx
+    return Q
 end
 
 function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
@@ -45,14 +42,13 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     streaming =  laplace
-    # boundary condition
-    left, right, Q = calculate_boundary(S,dx,n)
     collision = - spdiagm(0=> ones(n)) * Σa
     A = streaming + collision
-    A[1,1] = left
-    A[end,end] = right
-    phi = cg(ustrip(A), ustrip(Q))
+    # boundary condition
+    Q = apply_boundary_conditions!(A,S,dx,n)
+    # phi = cg(ustrip(A), ustrip(Q))
     # phi = bicgstabl(ustrip(A), ustrip(Q))
+    phi = ustrip(Q) \ ustrip(A)
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
