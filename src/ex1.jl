@@ -10,6 +10,10 @@ S = 1000
 L = sqrt(1/(3(Σs + Σa)*Σa))
 D = 1/(3 * ( Σs + Σa))
 
+function beta(i,j)
+    return D
+end
+
 # analytical solution
 function slab_analytical(x0,S)
     extrapolated_length = 2/3(Σs + Σa)
@@ -31,38 +35,51 @@ function apply_boundary_conditions!(A, S, dx, n)
     # Left boundary condition at x = 0
     # D * d^2/dx^2 ϕ(0) - Σ_a ϕ(0) = S / 2
     # Modify the first row of A to reflect this boundary condition
-    A[1, 1] = -2 * D / dx^2 - Σa
-    A[1, 2] = D / dx^2
-
+    # A[1, 1] = -2 * D / dx^2 - Σa
+    # A[1, 2] = D / dx^2
+    A[1,1] = - (1/dx^2)*beta(2,1) - Σa
+    A[1,2] = 1/dx^2 * beta(2,1)
     # Right boundary condition at x = n (Last node)
     # J⁺(0) = ϕ(0)/4 - D * dϕ/dx |_{x=0} = 0
     # Set up the right flux condition at the last row in A
-    A[n, n-1] = -D / dx
-    A[n, n] = 1 / 4 + D / dx
-
+    # A[n, n-1] = -D / dx
+    # A[n, n] = 1 / 4 + D / dx
+    A[n,n] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(n-1,1)/dx^2
+    A[n,n-1] = - beta(n-1,1)/dx^2
     # Adjust Q vector to include the source term
     Q = zeros(n)
-    Q[1] = S / 2/dx
+    Q[1] =  - S / 2/dx
 
     return Q
 end
 
+function apply_inner!(A,n,dx)
+    for i = 2:n-1
+        A[i,i] = beta(i+1,1)/dx^2 + beta(i-1,1)/dx^2 + Σa
+        A[i,i-1] = - beta(i-1,1)/dx^2
+        A[i,i+1] = -beta(i+1,1) / dx^2
+    end
+end
 
 function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
     dx = x0/n
-    x =  range(0,x0)
+    x =  dx:dx:x0
     Φ = slab_analytical(x0,S)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-    laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
-    streaming =  laplace
-    collision = - spdiagm(0=> ones(n)) * Σa
-    A = streaming + collision
+    # laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    # streaming =  laplace
+    # collision = - spdiagm(0=> ones(n)) * Σa
+    # A = streaming + collision
+
+    A = spzeros(n,n)
+    apply_inner!(A,n,dx)
     # boundary condition
     Q = apply_boundary_conditions!(A,S,dx,n)
     # phi = cg(ustrip(A), ustrip(Q))
     # phi = bicgstabl(ustrip(A), ustrip(Q))
-    phi = ustrip(Q) \ ustrip(A)
+    phi =  ustrip(A) \ ustrip(Q)
+    @show typeof(phi)
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
@@ -84,7 +101,8 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
         @show phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05)
     end
     if do_plot
-        plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
+        p_ana =  plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
+        p_num = plot(x ,phi, legend=false)
         if save savefig("docs/figs/ex1_analytical.png") end
         p_err = plot(x ,phi .- Φ.(x), legend=false)
         xlabel!("l")
@@ -95,7 +113,7 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
         ylabel!("Relative Error")
         # title!("Difference between Numerical and Analytical Solution")
         if save savefig("docs/figs/ex1_err_$(n).png") end
-        return plot(p_err, p_rel)
+        return plot(p_ana, p_num)
     end
     if max return maximum(abs.(phi .- Φ.(x))) end
     return abs(sum(phi .- Φ.(x)))
