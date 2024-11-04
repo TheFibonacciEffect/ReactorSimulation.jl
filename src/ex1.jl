@@ -120,17 +120,17 @@ end
 
 function plot_error(n)
     err = slab_reactor.(n; save = false)./n
-    ps = plot(n,err, ylabel="sum err", xlabel="number of grid points")
+    ps = plot(n,err, ylabel="sum err", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
     savefig("./docs/figs/sum_errors.png")
     err = slab_reactor.(n; save = false, max=true)
-    pm = plot(n,err, ylabel="max err", xlabel="number of grid points")
+    pm = plot(n,err, ylabel="max err", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
     savefig("./docs/figs/max_errors.png")
     plot(pm,ps)
 end
 
 slab_reactor(100; verbose=true, do_plot=true)
 slab_reactor(100000; verbose=true, do_plot=true)
-plot_error(100:1000:10000)
+plot_error(Int.(round.(10 .^ (1:1:5))))
 
 # @show Q
 # @show b
