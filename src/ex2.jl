@@ -58,6 +58,37 @@ function check_boundary(P,dx)
     # return - D/dx * diff(P) , + D/dx * diff(P)
 end
 
+function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
+    # numerical Parameters
+    l = a
+    n = l ÷ dx |> Int
+    x =  range(0, l,n)
+    # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
+    laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    display(laplace[1:3,1:3])
+    @assert laplace[1,2] ≈ D/dx^2
+    @show D/dx^2
+    streaming =  laplace
+    # streaming[1,1] = 
+    collision = - spdiagm(0=> ones(n)) * Σa
+    M = streaming + collision
+    reactor_length = n
+    fission = νΣf * spdiagm(0 => ones(reactor_length))
+    F = fission
+    apply_boundary_conditions!(M,D,dx,n)
+    display(M[1:3,1:3])
+    # initial guesses
+    k = 1
+    P = ones(n)
+    P = jacobi_iteration!(M,F,k, P)
+    Pl, Pr = check_boundary(P,dx)
+    p1 = plot(x,P)
+    p2 = plot(x[2:end],Pl,title="Boundary Conditions")
+    plot!(x[2:end],Pr)
+    plot(p1,p2)
+end
+
+
 function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
     l = a+2b
@@ -104,8 +135,9 @@ function jacobi_iteration!(M,F,k,P)
         k = k1
         i += 1
     end
-    return P
+    return P/P[end÷2]
 end
 
+reactor_without_reflector(0.1)
 reactor_reflector(0.1)
 reactor_reflector(0.01)
