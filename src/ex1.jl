@@ -31,10 +31,7 @@ function apply_boundary_conditions!(A, S, dx, n)
     # Left boundary condition at x = 0
     # D * d^2/dx^2 ϕ(0) - Σ_a ϕ(0) = S / 2
     # Modify the first row of A to reflect this boundary condition
-    D = dx^2  # assuming D has been incorporated in laplace scaling
-    Σ_a = -A[1, 1]  # assuming A has Σ_a on the diagonal originally
-    
-    A[1, 1] = -2 * D / dx^2 - Σ_a
+    A[1, 1] = -2 * D / dx^2 - Σa
     A[1, 2] = D / dx^2
 
     # Right boundary condition at x = n (Last node)
@@ -72,18 +69,13 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
         @show Φ(1.05)
         @show Φ(0)
         @show Φ(x0)
-        @show A[5,5]
-        @show A[5,6]
-        @show A[5,4]
-        @show A[4,5]
-        @show A[6,5]
+        print("A: ")
+        display(A[10:11,10:11])
         println("boundary conditions")
-        @show A[1,1]
-        @show A[1,2]
-        @show A[2,1]
-        @show A[end,end]
-        @show A[end-1,end]
-        @show A[end, end-1]
+        print("left A: ")
+        display(A[1:2,1:2])
+        print("right: ")
+        display(A[end-1:end,end-1:end])
         @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
         println("Question 3")
         @show phi[1]
@@ -119,7 +111,7 @@ function plot_error(n)
 end
 
 slab_reactor(100; verbose=true, do_plot=true)
-plot_error(100:1000:10000)
+# plot_error(100:1000:10000)
 
 # @show Q
 # @show b
