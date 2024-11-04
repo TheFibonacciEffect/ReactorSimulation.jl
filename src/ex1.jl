@@ -79,7 +79,6 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     # phi = cg(ustrip(A), ustrip(Q))
     # phi = bicgstabl(ustrip(A), ustrip(Q))
     phi =  ustrip(A) \ ustrip(Q)
-    @show typeof(phi)
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
@@ -102,7 +101,7 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
     end
     if do_plot
         p_ana =  plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
-        p_num = plot(x ,phi, legend=false)
+        p_num = plot(x ,phi, legend=false, title="Numerical Solution")
         if save savefig("docs/figs/ex1_analytical.png") end
         p_err = plot(x ,phi .- Φ.(x), legend=false)
         xlabel!("l")
@@ -113,23 +112,25 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
         ylabel!("Relative Error")
         # title!("Difference between Numerical and Analytical Solution")
         if save savefig("docs/figs/ex1_err_$(n).png") end
-        return plot(p_ana, p_num)
+        return plot(p_err, p_rel, p_ana, p_num, layout=(2,2))
     end
     if max return maximum(abs.(phi .- Φ.(x))) end
     return abs(sum(phi .- Φ.(x)))
 end
 
 function plot_error(n)
-    err = slab_reactor.(n; save = false)
-    plot(n,err, ylabel="sum err", xlabel="number of grid points")
+    err = slab_reactor.(n; save = false)./n
+    ps = plot(n,err, ylabel="sum err", xlabel="number of grid points")
     savefig("./docs/figs/sum_errors.png")
     err = slab_reactor.(n; save = false, max=true)
-    plot(n,err, ylabel="max err", xlabel="number of grid points")
+    pm = plot(n,err, ylabel="max err", xlabel="number of grid points")
     savefig("./docs/figs/max_errors.png")
+    plot(pm,ps)
 end
 
 slab_reactor(100; verbose=true, do_plot=true)
-# plot_error(100:1000:10000)
+slab_reactor(100000; verbose=true, do_plot=true)
+plot_error(100:1000:10000)
 
 # @show Q
 # @show b
