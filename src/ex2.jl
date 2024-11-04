@@ -15,20 +15,43 @@ D = 1/(3 * ( Σs + Σa))
 a = 20
 b = 10
 
-function apply_boundary_conditions!(M, D, dx, n)
-    # Modify left boundary (J^-(0))
-    @show D/dx^2
-    M[1:2,1:2] = [ 1/4-D/dx D/dx
-                D/dx^2 -2D/dx^2-Σa
-    ]
-    display(M[1:2,1:2])
-
-    # Modify right boundary (J^+(0))
-    M[n, n] = 1/4 - D / dx
-    M[n, n-1] = D / dx
+function beta(i,j)
+    return D
 end
 
+function apply_boundary_conditions!(A, D, dx, n)
+    # first attempt
+    #     # Modify left boundary (J^-(0))
+    # @show D/dx^2
+    # M[1:2,1:2] = [ 1/4-D/dx D/dx
+    #             D/dx^2 -2D/dx^2-Σa
+    # ]
+    # display(M[1:2,1:2])
 
+    # # Modify right boundary (J^+(0))
+    # M[n, n] = 1/4 - D / dx
+    # M[n, n-1] = D / dx
+
+    # from other solution
+    # Left boundary condition at x = 0
+    # D * d^2/dx^2 ϕ(0) - Σ_a ϕ(0) = S / 2
+    # Modify the first row of A to reflect this boundary condition
+    # A[1, 1] = -2 * D / dx^2 - Σa
+    # A[1, 2] = D / dx^2
+    # A[1,1] = - (1/dx^2)*beta(2,1) - Σa
+    # A[1,2] = 1/dx^2 * beta(2,1)
+
+    A[1,1] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(2,1)/dx^2
+    A[1,2] = - beta(1-1,1)/dx^2
+
+    # Right boundary condition at x = n (Last node)
+    # J⁺(0) = ϕ(0)/4 - D * dϕ/dx |_{x=0} = 0
+    # Set up the right flux condition at the last row in A
+    # A[n, n-1] = -D / dx
+    # A[n, n] = 1 / 4 + D / dx
+    A[n,n] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(n-1,1)/dx^2
+    A[n,n-1] = - beta(n-1,1)/dx^2
+end
     
 function check_boundary(P,dx)
     return P[2:end] - D/dx * diff(P) , P[2:end] + D/dx * diff(P)
@@ -61,12 +84,13 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     P = jacobi_iteration!(M,F,k, P)
     Pl, Pr = check_boundary(P,dx)
     p1 = plot(x,P)
-    p2 = plot(x[2:end],Pl)
+    p2 = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     plot(p1,p2)
 end
 
 function jacobi_iteration!(M,F,k,P)
+    # todo the error osscilattes strangely
     eps = 0.01
     err = Inf
     maxitter = 2
