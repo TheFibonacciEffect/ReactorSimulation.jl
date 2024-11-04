@@ -61,7 +61,7 @@ function apply_inner!(A,n,dx)
     end
 end
 
-function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
+function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, sum=false)
     # numerical Parameters
     dx = x0/n
     x =  dx:dx:x0
@@ -106,30 +106,31 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false)
         p_err = plot(x ,phi .- Φ.(x), legend=false)
         xlabel!("l")
         ylabel!("Error")
-        # title!("Difference between Numerical and Analytical Solution")
+        title!("Difference between Numerical and Analytical Solution")
+        if save savefig("docs/figs/ex1_err_$(n).png") end
         p_rel = plot(x ,(phi .- Φ.(x)) ./ Φ.(x), legend=false)
         xlabel!("l")
         ylabel!("Relative Error")
         # title!("Difference between Numerical and Analytical Solution")
-        if save savefig("docs/figs/ex1_err_$(n).png") end
         return plot(p_err, p_rel, p_ana, p_num, layout=(2,2))
     end
     if max return maximum(abs.(phi .- Φ.(x))) end
-    return abs(sum(phi .- Φ.(x)))
+    if sum return abs(sum(phi .- Φ.(x))) end
+    return abs(phi[n] - Φ.(x0))
 end
 
 function plot_error(n)
     err = slab_reactor.(n; save = false)./n
-    ps = plot(n,err, ylabel="sum err", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
-    savefig("./docs/figs/sum_errors.png")
+    ps = plot(n,err, ylabel="error at x0", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
+    savefig("./docs/figs/err_x0.png")
     err = slab_reactor.(n; save = false, max=true)
     pm = plot(n,err, ylabel="max err", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
     savefig("./docs/figs/max_errors.png")
     plot(pm,ps)
 end
 
-slab_reactor(100; verbose=true, do_plot=true)
-slab_reactor(100000; verbose=true, do_plot=true)
+@time slab_reactor(100; verbose=true, do_plot=true, save=true)
+@time slab_reactor(100000; verbose=true, do_plot=true)
 plot_error(Int.(round.(10 .^ (1:1:5))))
 
 # @show Q

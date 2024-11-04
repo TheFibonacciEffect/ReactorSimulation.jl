@@ -59,7 +59,7 @@
 \newpage
 \section{Question \#1}
 \begin{figure}[h]
-\includegraphics[width=7cm]{../figs/ex1_analytical.png}
+\includegraphics[width=7cm]{../figs/ex1/ex1_analytical.png}
 \centering
 \caption{Analytical Solution for the neutron flux as a function of depth.}
 \end{figure}
@@ -92,43 +92,43 @@ $$
 $$
 
 
-Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i+1},\ \mathrm{\Phi}_{i-1}$ at any point within the material:
-\begin{equation}
-    % \frac{1}{dx^2}(\Phi_{i-1} - 2 \Phi_{i} + \Phi_{i+1}) - \frac{1}{L} \Phi_{i} = 0
-    D \frac{ d^2 }{ dx^2 } \Phi  -  \Sigma_{a}\Phi = 0
-\end{equation}
+% Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i+1},\ \mathrm{\Phi}_{i-1}$ at any point within the material:
+% \begin{equation}
+%     % \frac{1}{dx^2}(\Phi_{i-1} - 2 \Phi_{i} + \Phi_{i+1}) - \frac{1}{L} \Phi_{i} = 0
+%     D \frac{ d^2 }{ dx^2 } \Phi  -  \Sigma_{a}\Phi = 0
+% \end{equation}
 
-Coefficients of the matrix A (4 significant digits), for a mesh size of 0.1cm:\\
-Coef ${} A_{i,i} = -200.2411 cm^{-2}$: \\
-Coef $A_{i-1,i} = 99.9999 cm^{-2}$: \\
-Coef $A_{i+1,i} = 99.9999 cm^{-2}$: \\
+% Coefficients of the matrix A (4 significant digits), for a mesh size of 0.1cm:\\
+% Coef ${} A_{i,i} = 16.6037 $: \\
+% Coef $A_{i-1,i} =  -8.2919 $: \\
+% Coef $A_{i+1,i} =  -8.2919 $: \\
 
-Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i-1/2},\ \mathrm{\Phi}_{i+1/2}$, \\
-at the source:
-\begin{align}
---\end{align}
-at the RHS of the problem:
-\begin{align}
-    J_{x}^{-}\left( x_{n+\frac{1}{2}} \right) &= 0  = \frac{1}{4}\Phi\left( x_{n+\frac{1}{2}} \right) + \frac{D}{2} \frac{d}{dx}\Phi  \\
-        & = \frac{\Phi_{n+\frac{1}{2}}}{4}+\frac{D}{2} \frac{\Phi_{n+\frac{1}{2}}-\Phi_{n}}{\frac{dx}{2}} \\
-\end{align}
+% Relationship between $\mathrm{\Phi}_i,\ \mathrm{\Phi}_{i-1/2},\ \mathrm{\Phi}_{i+1/2}$, \\
+% at the source:
+% \begin{align}
+% --\end{align}
+% at the RHS of the problem:
+% \begin{align}
+%     J_{x}^{-}\left( x_{n+\frac{1}{2}} \right) &= 0  = \frac{1}{4}\Phi\left( x_{n+\frac{1}{2}} \right) + \frac{D}{2} \frac{d}{dx}\Phi  \\
+%         & = \frac{\Phi_{n+\frac{1}{2}}}{4}+\frac{D}{2} \frac{\Phi_{n+\frac{1}{2}}-\Phi_{n}}{\frac{dx}{2}} \\
+% \end{align}
 Associated coefficients of the matrix A (4 significant digits), for a mesh size of 0.1cm:
 at the source:
 \begin{align}
-    A_{1, 1}     &= -100.2412 cm^{-2}\\
-    A_{1, 2}     &=  100.0000 cm^{-2}\\
-    A_{2, 1}     &=  100.0000 cm^{-2}
+    A_{1, 1}     &=   -8.31187\\
+    A_{1, 2}     &=    8.29187\\
+    A_{2, 1}     &=   -8.29187
 \end{align}
 at teh right hand side:
 \begin{align}
-    A_{n, n}     &= -146.5724 cm^{-2}\\
-    A_{n - 1, n} &=  100.0000 cm^{-2}\\
-    A_{n, n - 1} &=  100.0000 cm^{-2}
+    A_{n, n}     &= 12.1536\\
+    A_{n - 1, n} &=  -8.29187\\
+    A_{n, n - 1} &=  -8.29187
 \end{align}
 
 \section{Question \#3}
 \begin{figure}[h]
-\includegraphics[width=7cm]{../figs/ex1_err_100.png}
+\includegraphics[width=7cm]{../figs/ex1/ex1_err_100.png}
 \centering
 \caption{Distance between the solutions at each mesh point for a mesh size of 0.1 cm.}
 \end{figure}
@@ -139,13 +139,13 @@ Flux value at $x_0 = 17.732 cm^{-2} s^{-1}$: \\
 
 
 \begin{figure}[h]
-\includegraphics[width=7cm]{../figs/sum_errors.png}
+\includegraphics[width=7cm]{../figs/ex1/err_x0.png}
 \centering
 \caption{Evolution with mesh size of the absolute error of $\Phi(x_0)$.}
 \label{sumerr}
 \end{figure}
 \begin{figure}[h]
-\includegraphics[width=7cm]{../figs/max_errors.png}
+\includegraphics[width=7cm]{../figs/ex1/max_errors.png}
 \centering
 \caption{Evolution with mesh size of the absolute error of $\Phi(x_0)$.}
 \label{maxerr}
