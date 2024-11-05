@@ -94,6 +94,8 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     p_boundary_conditions = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
+    @show JL = (P[2] - P[1])/dx
+    @show JR = (P[end-1] - P[end])/dx
     plot(p1,p_err)
 end
 
@@ -127,6 +129,8 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     p2 = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
+    @show JL = round((P[2] - P[1])/dx, digits=5)
+    @show JR = round((P[end-1] - P[end])/dx, digits=5)
     plot(p1)
 end
 
@@ -142,12 +146,16 @@ function jacobi_iteration!(M,F,k,P)
         k1 = k*(norm(F*P1)/norm(F*P))^2
         err = (k1 - k)/k1
         P = P1
-        @show k = k1 + (k1 - k)/1000
+        # @show k = k1 + (k1 - k)/1000
+        k = k1
         i += 1
     end
+    @show round(k,digits=5)
     return P/P[end÷2]
 end
 
 reactor_without_reflector(0.1)
+savefig("docs/figs/ex2/bare.png")
 reactor_reflector(0.1)
+savefig("docs/figs/ex2/reflector.png")
 reactor_reflector(0.01)
