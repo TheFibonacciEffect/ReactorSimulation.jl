@@ -58,11 +58,17 @@ function check_boundary(P,dx)
     # return - D/dx * diff(P) , + D/dx * diff(P)
 end
 
+function analytical_reactor_without_reflector(x)
+    λ = 1/(Σa + Σs)
+    extr_l = 0.71*λ
+    B = π/(a + 2*extr_l)
+    cos(B*x)
+end
+
 function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
-    l = a
-    n = l ÷ dx |> Int
-    x =  range(0, l,n)
+    n = a ÷ dx |> Int
+    x =  range(0, a,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     display(laplace[1:3,1:3])
@@ -82,10 +88,13 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     P = ones(n)
     P = jacobi_iteration!(M,F,k, P)
     Pl, Pr = check_boundary(P,dx)
-    p1 = plot(x,P)
-    p2 = plot(x[2:end],Pl,title="Boundary Conditions")
+    p1 = plot(x,P, label="numerical")
+    plot!(x,analytical_reactor_without_reflector.(x.-10), label="analytical")
+    p_err = plot(x, P .- analytical_reactor_without_reflector.(x.-10), label="error")
+    p_boundary_conditions = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
-    plot(p1,p2)
+    @show P[1], P[end]
+    plot(p1,p_err)
 end
 
 
@@ -117,14 +126,15 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     p1 = plot(x,P)
     p2 = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
-    plot(p1,p2)
+    @show P[1], P[end]
+    plot(p1)
 end
 
 function jacobi_iteration!(M,F,k,P)
     # todo the error osscilattes strangely
     eps = 0.01
     err = Inf
-    maxitter = 2
+    maxitter = 20
     i = 0
     while abs(err) > eps && i < maxitter
         MP = 1/k * F * P
@@ -132,7 +142,7 @@ function jacobi_iteration!(M,F,k,P)
         k1 = k*(norm(F*P1)/norm(F*P))^2
         err = (k1 - k)/k1
         P = P1
-        k = k1
+        @show k = k1 + (k1 - k)/1000
         i += 1
     end
     return P/P[end÷2]
