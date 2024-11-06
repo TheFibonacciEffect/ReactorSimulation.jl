@@ -118,6 +118,9 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     @show P[Int((10+1.05) ÷ ustrip(dx))]
     @show JL = (P[2] - P[1])/dx
     @show JR = (P[end-1] - P[end])/dx
+    println("Flux at the Boundary")
+    @show analytical_reactor_without_reflector(-a/2) |> round5
+    @show analytical_reactor_without_reflector(a/2) |> round5
     plot(p1,p_err)
 end
 
