@@ -23,7 +23,20 @@ A steady state is reached, when the material Buckling is equal to the numerical 
 $$
 k_{\mathrm{eff}}=\frac{k_{\infty}}{1+L^2 B^2}
 $$
-
+https://en.wikipedia.org/wiki/Six_factor_formula
+$k=\eta f p \varepsilon P_{T N L}$
+$$
+\eta=\frac{\nu \sigma_f^F}{\sigma_a^F}=\frac{\nu \Sigma_f^F}{\Sigma_a^F}
+$$
+$$
+f=\frac{\Sigma_a^F}{\Sigma_a}
+$$
+$$
+p \approx \exp \left(-\frac{\sum_{i=1}^N N_i I_{r, A, i}}{\left(\bar{\xi} \Sigma_p\right)_{m o d}}\right)
+$$
+$$
+P_{T N L} \approx \frac{1}{1+L_{t h}{ }^2 B_g{ }^2}
+$$
 # Bare Reactor Numerical Solution
 ```
 JL = (P[2] - P[1]) / dx = 0.12542781405179504

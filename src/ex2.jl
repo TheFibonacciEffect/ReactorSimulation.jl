@@ -15,8 +15,28 @@ D = 1/(3 * ( Σs + Σa))
 a = 20
 b = 10
 
+round5(x) = round(x, digits=5)
 function beta(i,j)
     return D
+end
+
+function calculate_k(a,d)
+    # thermal diffusion length squared, L_th^2
+    L_th_sq = D / Σa
+    # geometric buckling B_g^2
+    @show H = a  # Height of the reactor core
+    @show B_g_sq = (π / H+d)^2 
+    @show η = νΣf / Σa
+    # Set f ≈ 1 and p ≈ 1 as approximations
+    f = 1
+    p = 1
+    # non-leakage probability P_TNL
+    # TODO this value is very small ≈ 0.001
+    P_TNL = 1 / (1 + L_th_sq * B_g_sq)
+    
+    # Step 7: Calculate k
+    k = η * f * p * P_TNL
+    return k
 end
 
 function apply_boundary_conditions!(A, D, dx, n)
@@ -62,6 +82,7 @@ function analytical_reactor_without_reflector(x)
     λ = 1/(Σa + Σs)
     extr_l = 0.71*λ
     B = π/(a + 2*extr_l)
+    @show calculate_k(a,extr_l) |> round5
     cos(B*x)
 end
 
@@ -94,6 +115,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     p_boundary_conditions = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
+    @show P[Int((10+1.05) ÷ ustrip(dx))]
     @show JL = (P[2] - P[1])/dx
     @show JR = (P[end-1] - P[end])/dx
     plot(p1,p_err)
@@ -129,6 +151,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     p2 = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
+    @show P[Int(1.05 ÷ ustrip(dx))]
     @show JL = round((P[2] - P[1])/dx, digits=5)
     @show JR = round((P[end-1] - P[end])/dx, digits=5)
     plot(p1)
