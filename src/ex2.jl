@@ -63,16 +63,19 @@ function apply_boundary_conditions!(A, D, dx, n)
     # A[1,1] = - (1/dx^2)*beta(2,1) - Σa
     # A[1,2] = 1/dx^2 * beta(2,1)
 
-    A[1,1] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(2,1)/dx^2
-    A[1,2] = - beta(1-1,1)/dx^2
+    # boundary conidtion from task 1
+    # A[1,1] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(2,1)/dx^2
+    # A[1,2] = - beta(1-1,1)/dx^2
 
     # Right boundary condition at x = n (Last node)
     # J⁺(0) = ϕ(0)/4 - D * dϕ/dx |_{x=0} = 0
     # Set up the right flux condition at the last row in A
     # A[n, n-1] = -D / dx
     # A[n, n] = 1 / 4 + D / dx
-    A[n,n] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(n-1,1)/dx^2
-    A[n,n-1] = - beta(n-1,1)/dx^2
+
+    # boundary condition from task 1
+    # A[n,n] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(n-1,1)/dx^2
+    # A[n,n-1] = - beta(n-1,1)/dx^2
 end
     
 function check_boundary(P,dx)
@@ -88,9 +91,9 @@ end
 function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run ------")
     # numerical Parameters
-    l = 2a
-    n = l ÷ dx |> Int
-    x =  range(-a, a,n)
+    l = 2a + 2extr_l
+    n = l ÷ dx -1 |> Int
+    x =  range(-l/2, l/2,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     display(laplace[1:3,1:3])
@@ -116,22 +119,22 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     p_boundary_conditions = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
-    @show P[Int((1.05) ÷ ustrip(dx))]
-    @show analytical_reactor_without_reflector(1.05)
-    @show JL = (P[2] - P[1])/dx
-    @show JR = (P[end-1] - P[end])/dx
+    @show P[Int((1.05 + l/2) ÷ ustrip(dx))] - 9.9723e-1
+    @show analytical_reactor_without_reflector(1.05) - 9.9723e-1
+    JL = (P[2] - P[1])/dx
+    JR = (P[end-1] - P[end])/dx
     @show calculate_k(a,extr_l) |> round5
     println("Flux at the Boundary")
-    @show analytical_reactor_without_reflector(-a/2) |> round5
-    @show analytical_reactor_without_reflector(a/2) |> round5
+    analytical_reactor_without_reflector(-a/2) |> round5
+    analytical_reactor_without_reflector(a/2) |> round5
     plot(p1,p_err)
 end
-
+reactor_without_reflector(0.1)
 
 function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
-    l = 2a+2b
-    n = l ÷ dx |> Int
+    l = 2a+2b+2extr_l
+    n = l ÷ dx - 1 |> Int
     x =  range(-l/2, l/2,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
@@ -153,6 +156,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     P = ones(n)
     P = jacobi_iteration!(M,F,k, P)
     # @show maximum(eigvals(inv(Matrix(M))*F))
+    # @show minimum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(M ./ F))
 
     # return plot(eigvecs(inv(Matrix(M))*F)[1,:])
@@ -161,7 +165,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     p2 = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
-    @show P[Int(1.05 ÷ ustrip(dx))]
+    @show P[Int((1.05 + l/2) ÷ ustrip(dx))]
     @show JL = round((P[2] - P[1])/dx, digits=5)
     @show JR = round((P[end-1] - P[end])/dx, digits=5)
     plot(p1)
@@ -180,7 +184,7 @@ function jacobi_iteration!(M,F,k,P)
         err = (k1 - k)/k1
         P = P1
         # @show k = k1 + (k1 - k)/1000
-        k = k1
+        @show k = k1
         i += 1
     end
     @show round(k,digits=5)
