@@ -3,6 +3,7 @@ using IterativeSolvers
 using Unitful
 using Plots
 using LinearAlgebra
+using Statistics
 # Phyical Parameters
 # x0 = 10u"cm"
 # S = 1000u"cm^-2*s^-1"
@@ -111,7 +112,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     # initial guesses
     k = 1
     P = ones(n)
-    P = jacobi_iteration!(M,F,k, P)
+    P = jacobi_iteration!(M,F,P,k)
     Pl, Pr = check_boundary(P,dx)
     p1 = plot(x,P, label="numerical")
     plot!(x,analytical_reactor_without_reflector.(x), label="analytical")
@@ -129,7 +130,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     analytical_reactor_without_reflector(a/2) |> round5
     plot(p1,p_err)
 end
-reactor_without_reflector(0.1)
+# reactor_without_reflector(0.1)
 
 function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     # numerical Parameters
@@ -153,8 +154,10 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     display(M[1:3,1:3])
     # initial guesses
     k = 1
-    P = ones(n)
-    P = jacobi_iteration!(M,F,k, P)
+    # P = ones(n)
+    P = rand(n)
+    # P = jacobi_iteration!(M,F,k, P)
+    P = jacobi_iteration!(M,F, P,k)
     # @show maximum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(M ./ F))
@@ -171,7 +174,25 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     plot(p1)
 end
 
-function jacobi_iteration!(M,F,k,P)
+function jacobi_iteration!(M,F,P,k0)
+    eps = 0.01
+    err = Inf
+    maxitter = 2000
+    i = 0
+    while abs(err) > eps && i < maxitter
+        P2 = M \ (F*P)
+        # P2 = - F \ (M*P) / k0 # doesnt work for the one with reflector, because F is singular in the reflector
+        @show k1 = 1/mean(P2 ./ P) # production / absorbtion
+        # err = std(P2 ./ P)
+        err = abs(k1-k0)/k1
+        P = P2/P2[end÷2]
+        k0 = k1
+        @show i += 1
+    end
+    return P
+end
+
+function jacobi_iteration_lecture!(M,F,k,P)
     # todo the error osscilattes strangely
     eps = 0.01
     err = Inf
