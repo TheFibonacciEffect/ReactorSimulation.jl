@@ -87,7 +87,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     display(A)
     # fast, slow
     F = - [
-        νΣf_f * I νΣf_f * I
+        νΣf_f * I νΣf_s * I
         spzeros(n,n) spzeros(n,n)
     ]
     println("F")
@@ -96,10 +96,13 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     A = Matrix(A)
     F = Matrix(F)
     M = inv(A) * F
-    k = eigvals(M)
-    # phi = eigvecs(M)[end,:]
-    # plot(real.(phi))
-    # plot!(imag.(phi))
+    # heatmap(A')
+    # F
+    @show k = eigvals(M)[end]
+    phi = eigvecs(M)[:,end]
+    phi = phi ./ phi[n ÷ 2]
+    p1 = plot(real.(phi))
+    plot!(imag.(phi))
     # the minus is important
     
     # reactor_length = n
