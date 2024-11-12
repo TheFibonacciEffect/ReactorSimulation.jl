@@ -27,7 +27,7 @@ function calculate_k(a,d)
     # thermal diffusion length squared, L_th^2
     L_th_sq = D / Σa
     # geometric buckling B_g^2
-    @show H = a  # Height of the reactor core
+    @show H = 2a  # Height of the reactor core
     @show B_g_sq = (π / (H+2d))^2 
     @show η = νΣf / Σa
     # Set f ≈ 1 and p ≈ 1 as approximations
@@ -96,23 +96,23 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     n = l ÷ dx -1 |> Int
     x =  range(-l/2, l/2,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-    laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     display(laplace[1:3,1:3])
-    @assert laplace[1,2] ≈ D/dx^2
     @show D/dx^2
-    streaming =  laplace
+    streaming =  D* laplace
     # streaming[1,1] = 
     collision = - spdiagm(0=> ones(n)) * Σa
     M = streaming + collision
     reactor_length = n
-    fission = νΣf * spdiagm(0 => ones(reactor_length))
+    fission = - νΣf * spdiagm(0 => ones(reactor_length))
     F = fission
     apply_boundary_conditions!(M,D,dx,n)
     display(M[1:3,1:3])
     # initial guesses
     k = 1
     P = ones(n)
-    P = jacobi_iteration!(M,F,P,k)
+    # P = jacobi_iteration!(M,F,P,k)
+    P = jacobi_iteration_lecture!(M,F,P,k)
     Pl, Pr = check_boundary(P,dx)
     p1 = plot(x,P, label="numerical")
     plot!(x,analytical_reactor_without_reflector.(x), label="analytical")
@@ -138,17 +138,16 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     n = l ÷ dx - 1 |> Int
     x =  range(-l/2, l/2,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-    laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     display(laplace[1:3,1:3])
-    @assert laplace[1,2] ≈ D/dx^2
     @show D/dx^2
-    streaming =  laplace
+    streaming = D* laplace
     # streaming[1,1] = 
     collision = - spdiagm(0=> ones(n)) * Σa
     M = streaming + collision
     moderator_length = n * b/l |> round |> Int
     reactor_length = n-2*moderator_length
-    fission = νΣf * spdiagm(0 => [zeros(moderator_length) ; ones(reactor_length); zeros(moderator_length)])
+    fission = - νΣf * spdiagm(0 => [zeros(moderator_length) ; ones(reactor_length); zeros(moderator_length)])
     F = fission
     apply_boundary_conditions!(M,D,dx,n)
     display(M[1:3,1:3])
@@ -156,8 +155,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     k = 1
     # P = ones(n)
     P = rand(n)
-    # P = jacobi_iteration!(M,F,k, P)
-    P = jacobi_iteration!(M,F, P,k)
+    P = jacobi_iteration_lecture!(M,F, P,k)
     # @show maximum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(M ./ F))
@@ -175,11 +173,12 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
 end
 
 function jacobi_iteration!(M,F,P,k0)
-    eps = 0.01
+    eps = 0.0001
     err = Inf
     maxitter = 2000
     i = 0
     while abs(err) > eps && i < maxitter
+        @show typeof(F*P)
         P2 = M \ (F*P)
         # P2 = - F \ (M*P) / k0 # doesnt work for the one with reflector, because F is singular in the reflector
         @show k1 = 1/mean(P2 ./ P) # production / absorbtion
@@ -192,7 +191,7 @@ function jacobi_iteration!(M,F,P,k0)
     return P
 end
 
-function jacobi_iteration_lecture!(M,F,k,P)
+function jacobi_iteration_lecture!(M,F,P,k)
     # todo the error osscilattes strangely
     eps = 0.01
     err = Inf
@@ -201,13 +200,15 @@ function jacobi_iteration_lecture!(M,F,k,P)
     while abs(err) > eps && i < maxitter
         MP = 1/k * F * P
         P1 = M \ MP
-        k1 = k*(norm(F*P1)/norm(F*P))^2
+        # k1 = k*(norm(F*P1)/norm(F*P))^2
+        k1 = k*sum(F*P1)/sum(F*P)
         err = (k1 - k)/k1
         P = P1
         # @show k = k1 + (k1 - k)/1000
         @show k = k1
         i += 1
     end
+    @show calculate_k(a,extr_l) - k
     @show round(k,digits=5)
     return P/P[end÷2]
 end
@@ -215,5 +216,3 @@ end
 reactor_without_reflector(0.1)
 savefig("docs/figs/ex2/bare.png")
 reactor_reflector(0.1)
-savefig("docs/figs/ex2/reflector.png")
-reactor_reflector(0.01)
