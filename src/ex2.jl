@@ -99,7 +99,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     display(laplace[1:3,1:3])
     @show D/dx^2
-    streaming =  -D* laplace
+    streaming =  D* laplace
     # streaming[1,1] = 
     collision = - spdiagm(0=> ones(n)) * Σa
     M = streaming + collision
@@ -112,7 +112,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     k = 1
     P = ones(n)
     P = jacobi_iteration!(M,F,P,k)
-    # P = jacobi_iteration_lecture!(M,F,k,P)
+    P = jacobi_iteration_lecture!(M,F,P,k)
     Pl, Pr = check_boundary(P,dx)
     p1 = plot(x,P, label="numerical")
     plot!(x,analytical_reactor_without_reflector.(x), label="analytical")
@@ -201,7 +201,8 @@ function jacobi_iteration_lecture!(M,F,P,k)
     while abs(err) > eps && i < maxitter
         MP = 1/k * F * P
         P1 = M \ MP
-        k1 = k*(norm(F*P1)/norm(F*P))^2
+        # k1 = k*(norm(F*P1)/norm(F*P))^2
+        k1 = k*sum(F*P1)/sum(F*P)
         err = (k1 - k)/k1
         P = P1
         # @show k = k1 + (k1 - k)/1000
@@ -214,6 +215,3 @@ end
 
 reactor_without_reflector(0.1)
 savefig("docs/figs/ex2/bare.png")
-reactor_reflector(0.1)
-savefig("docs/figs/ex2/reflector.png")
-reactor_reflector(0.01)
