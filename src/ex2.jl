@@ -156,7 +156,6 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     k = 1
     # P = ones(n)
     P = rand(n)
-    # P = jacobi_iteration!(M,F,k, P)
     P = jacobi_iteration!(M,F, P,k)
     # @show maximum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(inv(Matrix(M))*F))
@@ -174,12 +173,13 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     plot(p1)
 end
 
-function jacobi_iteration!(M,F,k,P)
+function jacobi_iteration!(M,F,P,k0)
     eps = 0.0001
     err = Inf
     maxitter = 2000
     i = 0
     while abs(err) > eps && i < maxitter
+        @show typeof(F*P)
         P2 = M \ (F*P)
         # P2 = - F \ (M*P) / k0 # doesnt work for the one with reflector, because F is singular in the reflector
         @show k1 = 1/mean(P2 ./ P) # production / absorbtion
@@ -192,7 +192,7 @@ function jacobi_iteration!(M,F,k,P)
     return P
 end
 
-function jacobi_iteration_lecture!(M,F,k,P)
+function jacobi_iteration_lecture!(M,F,P,k)
     # todo the error osscilattes strangely
     eps = 0.01
     err = Inf
