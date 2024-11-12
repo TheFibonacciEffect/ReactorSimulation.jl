@@ -27,7 +27,7 @@ function calculate_k(a,d)
     # thermal diffusion length squared, L_th^2
     L_th_sq = D / Σa
     # geometric buckling B_g^2
-    @show H = a  # Height of the reactor core
+    @show H = 2a  # Height of the reactor core
     @show B_g_sq = (π / (H+2d))^2 
     @show η = νΣf / Σa
     # Set f ≈ 1 and p ≈ 1 as approximations
