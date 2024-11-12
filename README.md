@@ -12,6 +12,5 @@ Download Julia using
 (on Linux), otherwise download julia from https://julialang.org/downloads/
 
 Then start julia in the same directory as the `Project.toml` is located.
-Start julia using `julia`.
-Go into package mode by pressing the `]` key. Activate the local environment by typing `activate .`, now install all required dependancies by typing `instantiate`. 
-Afterwards you can run the files using for example `julia --project=. ./src/ex1.jl`.
+Start install the dependencies by using using `julia --project=. -e "using Pkg;Pkg.instantiate()"` and waiting a few seconds.
+Afterwards you can run all the exercises using for example `julia --project=. src/ReactorSimulation.jl` or `julia --project=. .\src\ReactorSimulation.jl` (on Windows).
