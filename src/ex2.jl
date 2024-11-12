@@ -111,7 +111,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     # initial guesses
     k = 1
     P = ones(n)
-    P = jacobi_iteration!(M,F,P,k)
+    # P = jacobi_iteration!(M,F,P,k)
     P = jacobi_iteration_lecture!(M,F,P,k)
     Pl, Pr = check_boundary(P,dx)
     p1 = plot(x,P, label="numerical")
