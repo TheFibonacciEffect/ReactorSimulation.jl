@@ -138,17 +138,16 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     n = l ÷ dx - 1 |> Int
     x =  range(-l/2, l/2,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-    laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     display(laplace[1:3,1:3])
-    @assert laplace[1,2] ≈ D/dx^2
     @show D/dx^2
-    streaming =  laplace
+    streaming = D* laplace
     # streaming[1,1] = 
     collision = - spdiagm(0=> ones(n)) * Σa
     M = streaming + collision
     moderator_length = n * b/l |> round |> Int
     reactor_length = n-2*moderator_length
-    fission = νΣf * spdiagm(0 => [zeros(moderator_length) ; ones(reactor_length); zeros(moderator_length)])
+    fission = - νΣf * spdiagm(0 => [zeros(moderator_length) ; ones(reactor_length); zeros(moderator_length)])
     F = fission
     apply_boundary_conditions!(M,D,dx,n)
     display(M[1:3,1:3])
@@ -156,7 +155,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     k = 1
     # P = ones(n)
     P = rand(n)
-    P = jacobi_iteration!(M,F, P,k)
+    P = jacobi_iteration_lecture!(M,F, P,k)
     # @show maximum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(inv(Matrix(M))*F))
     # @show minimum(eigvals(M ./ F))
@@ -216,3 +215,4 @@ end
 
 reactor_without_reflector(0.1)
 savefig("docs/figs/ex2/bare.png")
+reactor_reflector(0.1)
