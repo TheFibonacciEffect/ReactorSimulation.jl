@@ -63,17 +63,6 @@ function left_side(D,Σa,n, dx)
     M = streaming + collision
 end
 
-function get_A(n,dx)
-    diffusion_slow = left_side(D_slow, Σa_s, n, dx)
-    # fast neutrons right hand side
-    diffusion_fast = left_side(D_fast, Σa_f, n, dx)
-    # Assume Φf; Φs
-    A = [
-        diffusion_fast-Σ12 *I   spzeros(n,n)
-        + Σ12 * I               diffusion_slow 
-    ]
-end
-
 function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run ------")
     # numerical Parameters
@@ -82,7 +71,14 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     x =  range(-l/2, l/2,n)
     B = get_buckling() # assume fast and slow buckling to be the same
     # slow neutrons right hand side
-    A = get_A(n,dx)
+    diffusion_slow = left_side(D_slow, Σa_s, n, dx)
+    # fast neutrons right hand side
+    diffusion_fast = left_side(D_fast, Σa_f, n, dx)
+    # Assume Φf; Φs
+    A = [
+        diffusion_fast-Σ12 *I   spzeros(n,n)
+        + Σ12 * I               diffusion_slow 
+    ]
     println("A")
     display(A)
     # fast, slow
