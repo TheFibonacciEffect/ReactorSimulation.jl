@@ -90,7 +90,7 @@ function analytical_reactor_without_reflector(x)
 end
 
 function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
-    println("------- start run ------")
+    println("------- bare reactor ------")
     # numerical Parameters
     l = 2a + 2extr_l
     n = l ÷ dx -1 |> Int
@@ -119,20 +119,22 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     p_err = plot(x, P .- analytical_reactor_without_reflector.(x), label="error")
     p_boundary_conditions = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
-    @show P[1], P[end]
+    @show round5.([P[1], P[end]])
     @show P[Int((1.05 + l/2) ÷ ustrip(dx))] - 9.9723e-1
     @show analytical_reactor_without_reflector(1.05) - 9.9723e-1
-    JL = (P[2] - P[1])/dx
-    JR = (P[end-1] - P[end])/dx
+    println("current at the boundary")
+    @show JL = (P[2] - P[1])/dx |> round5
+    @show JR = (P[end-1] - P[end])/dx |> round5
     @show calculate_k(a,extr_l) |> round5
     println("Flux at the Boundary")
-    analytical_reactor_without_reflector(-a/2) |> round5
-    analytical_reactor_without_reflector(a/2) |> round5
+    @show analytical_reactor_without_reflector(-a) |> round5
+    @show analytical_reactor_without_reflector(a) |> round5
     plot(p1,p_err)
 end
 # reactor_without_reflector(0.1)
 
 function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
+    println("-------------- reflected reactor ------------")
     # numerical Parameters
     l = 2a+2b+2extr_l
     n = l ÷ dx - 1 |> Int
@@ -205,7 +207,8 @@ function jacobi_iteration_lecture!(M,F,P,k)
         err = (k1 - k)/k1
         P = P1
         # @show k = k1 + (k1 - k)/1000
-        @show k = k1
+        k = k1
+        println("k = $(round5(k))")
         i += 1
     end
     @show calculate_k(a,extr_l) - k

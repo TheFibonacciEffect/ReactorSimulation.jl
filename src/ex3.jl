@@ -80,12 +80,13 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     l = 2a + 2extr_l
     n = l ÷ dx -1 |> Int
     x =  range(-l/2, l/2,n)
-    # slow neutrons right hand side
     B = get_buckling() # assume fast and slow buckling to be the same
+    # slow neutrons right hand side
     A = get_A(n,dx)
     println("A")
     display(A)
     # fast, slow
+    # the minus is important
     F = - [
         νΣf_f * I νΣf_s * I
         spzeros(n,n) spzeros(n,n)
@@ -96,14 +97,12 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     A = Matrix(A)
     F = Matrix(F)
     M = inv(A) * F
-    # heatmap(A')
-    # F
     @show k = eigvals(M)[end]
     phi = eigvecs(M)[:,end]
+    phi = real.(phi)
     phi = phi ./ phi[n ÷ 2]
-    p1 = plot(real.(phi))
-    plot!(imag.(phi))
-    # the minus is important
+    p1 = plot(x,phi[1:n], label="fast neutrons")
+    plot!(x,phi[n+1:end], label="slow neutrons")
     
     # reactor_length = n
     # fission = νΣf * spdiagm(0 => ones(reactor_length))
@@ -133,4 +132,4 @@ end
 # reactor_without_reflector(0.1)
 
 reactor_without_reflector(0.1)
-# savefig("docs/figs/ex3/bare.png")
+savefig("docs/figs/ex3/bare.png")
