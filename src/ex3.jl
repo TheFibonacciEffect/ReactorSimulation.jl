@@ -59,7 +59,7 @@ end
 function left_side(D,Σa,n, dx)
     laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     streaming = D* laplace
-    collision = -  spdiagm(0=> ones(n)) * Σa
+    collision = - Σa * I
     M = streaming + collision
 end
 
@@ -69,8 +69,8 @@ function get_A(n,dx)
     diffusion_fast = left_side(D_fast, Σa_f, n, dx)
     # Assume Φf; Φs
     A = [
-        diffusion_fast    -Σ12 * I
-        + Σ12 * I         diffusion_slow 
+        diffusion_fast-Σ12 *I   spzeros(n,n)
+        + Σ12 * I               diffusion_slow 
     ]
 end
 
@@ -83,12 +83,25 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     # slow neutrons right hand side
     B = get_buckling() # assume fast and slow buckling to be the same
     A = get_A(n,dx)
+    println("A")
+    display(A)
     # fast, slow
     F = - [
         νΣf_f * I νΣf_f * I
         spzeros(n,n) spzeros(n,n)
     ]
-
+    println("F")
+    display(F)
+    # make sparse matrecies dense
+    A = Matrix(A)
+    F = Matrix(F)
+    M = inv(A) * F
+    k = eigvals(M)
+    # phi = eigvecs(M)[end,:]
+    # plot(real.(phi))
+    # plot!(imag.(phi))
+    # the minus is important
+    
     # reactor_length = n
     # fission = νΣf * spdiagm(0 => ones(reactor_length))
     # F = fission
