@@ -209,6 +209,7 @@ function jacobi_iteration_lecture!(M,F,P,k)
         @show k = k1
         i += 1
     end
+    @show calculate_k(a,extr_l) - k
     @show round(k,digits=5)
     return P/P[end÷2]
 end
