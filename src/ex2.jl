@@ -96,23 +96,23 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     n = l ÷ dx -1 |> Int
     x =  range(-l/2, l/2,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
-    laplace = D* spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     display(laplace[1:3,1:3])
-    @assert laplace[1,2] ≈ D/dx^2
     @show D/dx^2
-    streaming =  laplace
+    streaming =  -D* laplace
     # streaming[1,1] = 
     collision = - spdiagm(0=> ones(n)) * Σa
     M = streaming + collision
     reactor_length = n
-    fission = νΣf * spdiagm(0 => ones(reactor_length))
+    fission = - νΣf * spdiagm(0 => ones(reactor_length))
     F = fission
     apply_boundary_conditions!(M,D,dx,n)
     display(M[1:3,1:3])
     # initial guesses
     k = 1
     P = ones(n)
-    P = jacobi_iteration!(M,F,P,k)
+    # P = jacobi_iteration!(M,F,P,k)
+    P = jacobi_iteration_lecture!(M,F,k,P)
     Pl, Pr = check_boundary(P,dx)
     p1 = plot(x,P, label="numerical")
     plot!(x,analytical_reactor_without_reflector.(x), label="analytical")
@@ -174,8 +174,8 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     plot(p1)
 end
 
-function jacobi_iteration!(M,F,P,k0)
-    eps = 0.01
+function jacobi_iteration!(M,F,k,P)
+    eps = 0.0001
     err = Inf
     maxitter = 2000
     i = 0
