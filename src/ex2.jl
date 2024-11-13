@@ -219,3 +219,4 @@ end
 reactor_without_reflector(0.1)
 savefig("docs/figs/ex2/bare.png")
 reactor_reflector(0.1)
+savefig("docs/figs/reflector.png")

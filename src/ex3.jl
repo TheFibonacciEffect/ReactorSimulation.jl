@@ -4,6 +4,7 @@ using Unitful
 using Plots
 using LinearAlgebra
 using Statistics
+
 println("Exercise 3")
 D_fast = 1.13
 D_slow = 0.16
@@ -13,7 +14,7 @@ D_slow = 0.16
 νΣf_s = 0.069
 Σ12 = 0.038
 a = 50
-b = 10 # Set to 0 for testing
+b = 10
 
 round5(x) = round(x, digits=5)
 function calculate_k(a,d)
@@ -89,9 +90,6 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     p1 = plot(x,phi[1:n], label="fast neutrons")
     plot!(x,phi[n+1:end], label="slow neutrons")
 end
-reactor_without_reflector(0.1)
-savefig("docs/figs/ex3/bare.png")
-
 # functions for reactor with reflector
 
 function beta(i,D)
@@ -163,5 +161,9 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     p1 = plot(x,phi[1:nt], label="fast neutrons")
     plot!(x,phi[nt+1:end], label="slow neutrons")
 end
+
+# run the code
+reactor_without_reflector(0.1)
+savefig("docs/figs/ex3/bare.png")
 reactor_with_reflector(0.1)
 savefig("docs/figs/ex3/reflected.png")
