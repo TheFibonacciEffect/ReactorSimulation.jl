@@ -101,25 +101,19 @@ function beta(i,D)
     return 2*D[i-1] * D[i] / (D[i] + D[i-1])
 end
 
-
-function apply_inner!(A,n,dx,D)
-    for i = 2:n-1
-        A[i,i] = - beta(i+1,D)/dx^2 + beta(i-1,D)/dx^2
-        A[i,i-1] = + beta(i-1,D)/dx^2
-        A[i,i+1] = + beta(i+1,D) / dx^2
-    end
-end
-
-function apply_boundary_conditions!(A, D, dx, n)
-    # TODO
-    A[1,1] 
-    A[end,end]
-end
-
 function left_side(D::Array,Σa::Array,n, dx)
+    println("left side with arrays")
     # TODO
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     streaming = spzeros(n,n)
+    # TODO
+    streaming[1,1] 
+    streaming[end,end]
+    for i = 2:n-1
+        streaming[i,i] = - beta(i+1,D)/dx^2 - beta(i-1,D)/dx^2
+        streaming[i,i-1] = + beta(i-1,D)/dx^2
+        streaming[i,i+1] = + beta(i+1,D) / dx^2
+    end
     apply_inner!(streaming, n,dx,D)
     collision = - Σa * I
     
@@ -132,26 +126,29 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     l = 2a + 2b
     nc = 2a ÷ dx -1 |> Int
     nr = b ÷ dx -1 |> Int
+    nt = nr + nc
     x =  range(-l/2, l/2,nc+ 2nr)
+    D_slow  = [fill(0.16,nr) fill(0.16, nc) fill(0.16, nr)]
+    D_fast  = 
+    Σa_s    =
+    Σa_f    =
     # slow neutrons right hand side
     diffusion_slow = left_side(D_slow, Σa_s, nc, dx)
     # fast neutrons right hand side
     diffusion_fast = left_side(D_fast, Σa_f, nc, dx)
     # Assume Φf; Φs
-    rector_reflector_boundary = spzeros(nr, nc)
-    rector_reflector_boundary[end,1] = -D/2 # or something like that
-    # A = [
-    #     diffusion_slow_reflector    reactor_reflector_boundary spzeros(nr,nc)
-    #     reactor_reflector_boundary'    diffusion_fast-Σ12 *I   spzeros(nc,nc)
-    #     reactor_reflector_boundary'     spzeros(nc,nc)
-    #     spzeros(nr,nc)                + Σ12 * I               diffusion_slow 
-    # ]
+    A = [
+        diffusion_fast-Σ12 *I   spzeros(nt,nt)
+        + Σ12 * I               diffusion_slow 
+    ]
     println("A")
     display(A)
+    νΣf_f_array = [zeros(nr)  νΣf_f * ones(nc) zeros(nr)]
+    νΣf_s_array = [zeros(nr)  νΣf_s * ones(nc) zeros(nr)]
     # fast, slow
     # the minus is important
     F = - [
-        νΣf_f * I νΣf_s * I
+        spdiagm(0 => νΣf_f_array)  spdiagm(0 => νΣf_s_array)
         spzeros(nc,nc) spzeros(nc,nc)
     ]
     println("F")
