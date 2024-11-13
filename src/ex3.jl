@@ -13,7 +13,7 @@ D_slow = 0.16
 νΣf_s = 0.069
 Σ12 = 0.038
 a = 50
-b = 0 # Set to 0 for testing
+b = 10 # Set to 0 for testing
 
 round5(x) = round(x, digits=5)
 function calculate_k(a,d)
@@ -101,22 +101,23 @@ function beta(i,D)
     return 2*D[i-1] * D[i] / (D[i] + D[i-1])
 end
 
-function left_side(D::Array,Σa::Array,n, dx)
+function left_side(D,Σa::Array,n, dx)
     println("left side with arrays")
     # TODO
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     streaming = spzeros(n,n)
     # TODO
-    streaming[1,1] 
-    streaming[end,end]
-    for i = 2:n-1
-        streaming[i,i] = - beta(i+1,D)/dx^2 - beta(i-1,D)/dx^2
-        streaming[i,i-1] = + beta(i-1,D)/dx^2
-        streaming[i,i+1] = + beta(i+1,D) / dx^2
-    end
-    apply_inner!(streaming, n,dx,D)
-    collision = - Σa * I
-    
+    # streaming[1,1] 
+    # streaming[end,end]
+    # for i = 2:n-1
+    #     streaming[i,i] = - beta(i+1,D)/dx^2 - beta(i-1,D)/dx^2
+    #     streaming[i,i-1] = + beta(i-1,D)/dx^2
+    #     streaming[i,i+1] = + beta(i+1,D) / dx^2
+    # end
+    # apply_inner!(streaming, n,dx,D)
+    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    streaming = D* laplace
+    collision = - spdiagm(0 => Σa)
     M = streaming + collision
 end
 
@@ -124,18 +125,16 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     println("------- start run for reactor with reflector ------")
     # numerical Parameters
     l = 2a + 2b
-    nc = 2a ÷ dx -1 |> Int
-    nr = b ÷ dx -1 |> Int
-    nt = nr + nc
-    x =  range(-l/2, l/2,nc+ 2nr)
-    D_slow  = [fill(0.16,nr) fill(0.16, nc) fill(0.16, nr)]
-    D_fast  = 
-    Σa_s    =
-    Σa_f    =
+    nc = 2a ÷ dx |> Int
+    nr = b ÷ dx |> Int
+    nt = 2*nr + nc
+    x =  range(-l/2, l/2,nt) 
+    Σa_s    = [fill(0.012, nr); fill(0.06, nc)   ;   fill(0.012, nr)]
+    Σa_f    = [fill(0, nr)    ; fill(0.002, nc)  ;   fill(0.0, nr)]
     # slow neutrons right hand side
-    diffusion_slow = left_side(D_slow, Σa_s, nc, dx)
+    diffusion_slow = left_side(D_slow, Σa_s, nt, dx)
     # fast neutrons right hand side
-    diffusion_fast = left_side(D_fast, Σa_f, nc, dx)
+    diffusion_fast = left_side(D_fast, Σa_f, nt, dx)
     # Assume Φf; Φs
     A = [
         diffusion_fast-Σ12 *I   spzeros(nt,nt)
@@ -143,13 +142,13 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     ]
     println("A")
     display(A)
-    νΣf_f_array = [zeros(nr)  νΣf_f * ones(nc) zeros(nr)]
-    νΣf_s_array = [zeros(nr)  νΣf_s * ones(nc) zeros(nr)]
+    νΣf_f_array = [zeros(nr) ; νΣf_f * ones(nc) ; zeros(nr)]
+    νΣf_s_array = [zeros(nr) ; νΣf_s * ones(nc) ; zeros(nr)]
     # fast, slow
     # the minus is important
     F = - [
         spdiagm(0 => νΣf_f_array)  spdiagm(0 => νΣf_s_array)
-        spzeros(nc,nc) spzeros(nc,nc)
+        spzeros(nt,nt) spzeros(nt,nt)
     ]
     println("F")
     display(F)
@@ -161,8 +160,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     phi = eigvecs(M)[:,end]
     phi = real.(phi)
     phi = phi ./ phi[nc ÷ 2]
-    p1 = plot(x,phi[1:nc], label="fast neutrons")
-    plot!(x,phi[nc+1:end], label="slow neutrons")
+    p1 = plot(x,phi[1:nt], label="fast neutrons")
+    plot!(x,phi[nt+1:end], label="slow neutrons")
 end
 reactor_with_reflector(0.1)
-savefig("docs/figs/ex3/bare.png")
+savefig("docs/figs/ex3/reflected.png")
