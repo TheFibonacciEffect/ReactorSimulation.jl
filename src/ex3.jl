@@ -35,10 +35,6 @@ function calculate_k(a,d)
     return k
 end
 
-function apply_boundary_conditions!(A, D, dx, n)
-    # nothing to do because boundary is 0
-end
-
 function analytical_reactor_without_reflector(x)
     B = π/(2a)
     cos(B*x)
@@ -106,18 +102,25 @@ function beta(i,D)
 end
 
 
-function apply_inner!(A,n,dx,D, Σa)
+function apply_inner!(A,n,dx,D)
     for i = 2:n-1
-        A[i,i] = beta(i+1,D)/dx^2 + beta(i-1,D)/dx^2 + Σa[i]
-        A[i,i-1] = - beta(i-1,D)/dx^2
-        A[i,i+1] = -beta(i+1,D) / dx^2
+        A[i,i] = - beta(i+1,D)/dx^2 + beta(i-1,D)/dx^2
+        A[i,i-1] = + beta(i-1,D)/dx^2
+        A[i,i+1] = + beta(i+1,D) / dx^2
     end
+end
+
+function apply_boundary_conditions!(A, D, dx, n)
+    # TODO
+    A[1,1] 
+    A[end,end]
 end
 
 function left_side(D::Array,Σa::Array,n, dx)
     # TODO
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
-    laplace = spzeros(n,n)
+    streaming = spzeros(n,n)
+    apply_inner!(streaming, n,dx,D)
     collision = - Σa * I
     
     M = streaming + collision
