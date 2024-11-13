@@ -102,12 +102,12 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
     if do_plot
         p_ana =  plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
         p_num = plot(x ,phi, legend=false, title="Numerical Solution")
-        if save savefig("docs/figs/ex1_analytical.png") end
+        if save savefig("docs/figs/ex1/ex1_analytical.png") end
         p_err = plot(x ,phi .- Φ.(x), legend=false)
         xlabel!("l")
         ylabel!("Error")
         title!("Difference between Numerical and Analytical Solution")
-        if save savefig("docs/figs/ex1_err_$(n).png") end
+        if save savefig("docs/figs/ex1/ex1_err_$(n).png") end
         p_rel = plot(x ,(phi .- Φ.(x)) ./ Φ.(x), legend=false)
         xlabel!("l")
         ylabel!("Relative Error")
@@ -122,10 +122,10 @@ end
 function plot_error(n)
     err = slab_reactor.(n; save = false)./n
     ps = plot(n,err, ylabel="error at x0", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
-    savefig("./docs/figs/err_x0.png")
+    savefig("./docs/figs/ex1/err_x0.png")
     err = slab_reactor.(n; save = false, max=true)
     pm = plot(n,err, ylabel="max err", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
-    savefig("./docs/figs/max_errors.png")
+    savefig("./docs/figs/ex1/max_errors.png")
     plot(pm,ps)
 end
 

@@ -165,5 +165,7 @@ end
 # run the code
 reactor_without_reflector(0.1)
 savefig("docs/figs/ex3/bare.png")
+println("file saved to: docs/figs/ex3/bare.png")
 reactor_with_reflector(0.1)
 savefig("docs/figs/ex3/reflected.png")
+println("file saved to: docs/figs/ex3/reflected.png")
