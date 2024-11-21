@@ -30,11 +30,11 @@ b = 10
 round5(x) = round(x, digits=5)
 function calculate_k(a,d)
     # thermal diffusion length squared, L_th^2
-    L_th_sq = D / Σa
+    L_th_sq = D_slow / Σa_s
     # geometric buckling B_g^2
     @show H = a  # Height of the reactor core
     @show B_g_sq = (π / (H+2d))^2 
-    @show η = νΣf / Σa
+    @show η = (νΣf_f + νΣf_s) / (Σa_f + Σa_s)
     # Set f ≈ 1 and p ≈ 1 as approximations
     f = 1
     p = 1
@@ -47,9 +47,9 @@ function calculate_k(a,d)
     return k
 end
 
-function analytical_reactor_without_reflector(x)
+function analytical_reactor_without_reflector(x,A)
     B = π/(2a)
-    cos(B*x)
+    A*cos(B*x)
 end
 
 # function right_side(B,D,Σa)
@@ -65,7 +65,42 @@ function left_side(D,Σa,n, dx)
     M = streaming + collision
 end
 
-function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
+function compute_flux(D_s, D_f, B, Σ_as, Σ_af, Σ_1_to_2, νΣ_ff, νΣ_fs, k, ϕ_guess)
+    # Compute the determinant of A
+    det_A = (D_s * B - Σ_af - Σ_1_to_2) * (D_f * B - Σ_as)
+
+    # Compute the inverse of A
+    A_inv = [
+        (D_s * B - Σ_as) / det_A           0
+        -Σ_1_to_2 / det_A                 (D_f * B - Σ_af - Σ_1_to_2) / det_A
+    ]
+
+    A = [
+        (D_f * B - Σ_af - Σ_1_to_2) 0
+        Σ_1_to_2  (D_s * B - Σ_as)
+    ]
+
+    # Define matrix F
+    F = - [
+        νΣ_ff    νΣ_fs
+        0        0
+    ]
+
+    # Compute -F * ϕ / k
+    # Fϕ = -1 / k * F
+
+    # Compute updated flux ϕ = A⁻¹ * (-Fϕ / k)
+    @show M = inv(A) * F
+    @show k = eigvals(M)[end]
+    @show phi = eigvecs(M)[:,end]
+
+    # Return components of ϕ
+    return  phi
+end
+
+
+
+function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false, error=false)
     println("------- start run for bare reactor ------")
     # numerical Parameters
     l = 2a
@@ -100,9 +135,19 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     phi = phi ./ phi[n ÷ 2]
     fast = phi[1:n]
     slow = phi[n+1:end]
+    @show B = π/(2a)
+    if error
+        ϕ = compute_flux(D_slow,D_fast,B,Σa_s, Σa_f,Σ12, νΣf_f, νΣf_s, calculate_k(l,0),[1, 1])
+        ϕf, ϕs = ϕ./ϕ[1]
+        fa = analytical_reactor_without_reflector.(x,ϕf)
+        sl = analytical_reactor_without_reflector.(x,ϕs)
+        plot(x,fast - fa, label="error fast")
+        return plot!(x, slow - sl, label="error slow") 
+        # plot(x,fa, label="error fast")
+        # return plot!(x, sl, label="error slow")
+    end
     @show get_B(x,fast)
     @show get_B(x,slow)
-    @show π/(2a)
     p1 = plot(x,fast, label="fast neutrons")
     plot!(x,slow, label="slow neutrons")
 end
@@ -117,10 +162,9 @@ end
 
 function left_side(D,Σa::Array,n, dx)
     println("left side with arrays")
-    # TODO
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
+    # not nessesary, because the diffision length is the same
     streaming = spzeros(n,n)
-    # TODO
     # streaming[1,1] 
     # streaming[end,end]
     # for i = 2:n-1
@@ -192,3 +236,6 @@ println("file saved to: docs/figs/ex3/bare.png")
 reactor_with_reflector(0.1)
 savefig("docs/figs/ex3/reflected.png")
 println("file saved to: docs/figs/ex3/reflected.png")
+reactor_without_reflector(0.1,error=true)
+savefig("docs/figs/ex3/error.png")
+println("file saved to: docs/figs/ex3/error.png")
