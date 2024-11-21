@@ -4,6 +4,17 @@ using Unitful
 using Plots
 using LinearAlgebra
 using Statistics
+using LsqFit
+
+function fit_cos(x,y)
+    f(x,p) = @. p[1] * cos(p[2]*x)
+    p0 = [1,0.01]
+    curve_fit(f,x,y,p0)
+end
+
+function get_B(x,y)
+    fit_cos(x,y).param[2]#maybe sqrt
+end
 
 println("Exercise 3")
 D_fast = 1.13
@@ -87,8 +98,13 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     phi = eigvecs(M)[:,end]
     phi = real.(phi)
     phi = phi ./ phi[n ÷ 2]
-    p1 = plot(x,phi[1:n], label="fast neutrons")
-    plot!(x,phi[n+1:end], label="slow neutrons")
+    fast = phi[1:n]
+    slow = phi[n+1:end]
+    @show get_B(x,fast)
+    @show get_B(x,slow)
+    @show π/(2a)
+    p1 = plot(x,fast, label="fast neutrons")
+    plot!(x,slow, label="slow neutrons")
 end
 # functions for reactor with reflector
 
