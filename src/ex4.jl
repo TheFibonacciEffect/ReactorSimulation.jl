@@ -1,6 +1,6 @@
 using DifferentialEquations
 using Plots
-# all calculations are done in days!
+# all calculations are done in days and barns!
 
 # Cross sections in barns
 sig_c = Dict("U-235" => 12, "U-238" => 4, "Pu-239" => 81, "X" => 5e6, "Y" => 50)
@@ -19,14 +19,16 @@ t_half = Dict("U-235" => "stable", "U-238" => "stable", "Pu-239" => "stable", "X
 # Fission yields (FY)
 fy = Dict("U-235" => 0. , "U-238" => 0. , "Pu-239" => 0. , "X" => 0.06, "Y" => 1.94)
 
+b = 1e-24 #barns in cm^2 
 κ = 3.2e-11
 println("Cross-section (capture) for Pu-239: ", sig_c["Pu-239"])
 function betman_eq!(du,u,p,t)
-    #= 5 =# du[1] = κ*((- sig_c["U-235"] -  sig_f["U-235"])*u[1] )
-    #= 8 =# du[2] = κ*((- sig_c["U-238"] -  sig_f["U-238"])*u[2] )
-    #= 9 =# du[3] = κ*((- sig_c["Pu-239"] - sig_f["Pu-239"])*u[3] + sig_c["U-238"]*u[2] )
-    #= X =# du[4] = -κ*sig_c["X"]*u[4] + κ* sig_f["U-235"] * u[1] *fy["X"] - λ["X"]*u[4]
-    #= Y =# du[5] = -κ*sig_c["Y"]*u[5] + κ* sig_f["U-235"] * u[1] *fy["Y"] - λ["Y"]*u[5]
+    Φ = 1e15*b * (60^2*24) # to neutrons per barn per day
+    #= 5 =# du[1] = Φ*((- sig_c["U-235"] -  sig_f["U-235"])*u[1] )
+    #= 8 =# du[2] = Φ*((- sig_c["U-238"] -  sig_f["U-238"])*u[2] )
+    #= 9 =# du[3] = Φ*((- sig_c["Pu-239"] - sig_f["Pu-239"])*u[3] + sig_c["U-238"]*u[2] )
+    #= X =# du[4] = -Φ*sig_c["X"]*u[4] + Φ* sig_f["U-235"] * u[1] *fy["X"] - λ["X"]*u[4]
+    #= Y =# du[5] = -Φ*sig_c["Y"]*u[5] + Φ* sig_f["U-235"] * u[1] *fy["Y"] - λ["Y"]*u[5]
 end
 
 M = 264*2.091044070 #kg
@@ -68,4 +70,4 @@ end
 plot!()
 end
 plotsol(sol)
-to_matrix(betman_eq!,5)
+# to_matrix(betman_eq!,5)
