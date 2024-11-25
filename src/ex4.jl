@@ -15,7 +15,7 @@ kappa = Dict("U-235" => 3.24e-11, "U-238" => 3.32e-11, "Pu-239" => 3.33e-11, "X"
 
 # Half-life (T1/2)
 t_half = Dict("U-235" => "stable", "U-238" => "stable", "Pu-239" => "stable", "X" => "9h", "Y" => "stable")
-λ =      Dict("U-235" => 0, "U-238" => 0, "Pu-239" => 0, "X" => log(2)/(9), "Y" => 0)
+λ =      Dict("U-235" => 0, "U-238" => 0, "Pu-239" => 0, "X" => log(2)/(9*60^2), "Y" => 0)
 # Fission yields (FY)
 fy = Dict("U-235" => 0. , "U-238" => 0. , "Pu-239" => 0. , "X" => 0.06, "Y" => 1.94)
 
@@ -23,12 +23,12 @@ b = 1e-24 #barns in cm^2
 κ = 3.2e-11
 println("Cross-section (capture) for Pu-239: ", sig_c["Pu-239"])
 function betman_eq!(du,u,p,t)
-    Φ = 1e15*b * (60^2*24) # to neutrons per barn per day
-    #= 5 =# du[1] = Φ*((- sig_c["U-235"] -  sig_f["U-235"])*u[1] )
-    #= 8 =# du[2] = Φ*((- sig_c["U-238"] -  sig_f["U-238"])*u[2] )
-    #= 9 =# du[3] = Φ*((- sig_c["Pu-239"] - sig_f["Pu-239"])*u[3] + sig_c["U-238"]*u[2] )
-    #= X =# du[4] = -Φ*sig_c["X"]*u[4] + Φ* sig_f["U-235"] * u[1] *fy["X"] - λ["X"]*u[4]
-    #= Y =# du[5] = -Φ*sig_c["Y"]*u[5] + Φ* sig_f["U-235"] * u[1] *fy["Y"] - λ["Y"]*u[5]
+    Φ = 1e15 # * (60^2*24) # to neutrons per barn per day
+    #= 5 =# du[1] = Φ*((- sig_c["U-235"]*b -  sig_f["U-235"]*b)*u[1] )
+    #= 8 =# du[2] = Φ*((- sig_c["U-238"]*b -  sig_f["U-238"]*b)*u[2] )
+    #= 9 =# du[3] = Φ*((- sig_c["Pu-239"]*b - sig_f["Pu-239"]*b)*u[3] + sig_c["U-238"]*b*u[2] )
+    #= X =# du[4] = -Φ*sig_c["X"]*b*u[4] + Φ* sig_f["U-235"]*b * u[1] *fy["X"]*b - λ["X"]*b*u[4]
+    #= Y =# du[5] = -Φ*sig_c["Y"]*b*u[5] + Φ* sig_f["U-235"]*b * u[1] *fy["Y"]*b - λ["Y"]*b*u[5]
 end
 
 M = 264*2.091044070 #kg
@@ -69,5 +69,17 @@ for (i, label) in enumerate(["U5" "U8" "P9" "X" "Y"])
 end
 plot!()
 end
+
+function analytica_solution(t)
+    # TODO
+end
+
+function error(dt)
+    prob = ODEProblem(betman_eq!, [N5,N8,0,0,0],(0,1.),dt=dt)
+    # prob = ODEProblem(betman_eq!, [1,0,0,0,0],(0,1.), dtmax=0.01)
+    sol = solve(prob, Euler)
+    return sol.u[end]
+end
 plotsol(sol)
-# to_matrix(betman_eq!,5)
+# I get -6.8e-8 and matieu gets -6.8e-10
+to_matrix(betman_eq!,5)/100
