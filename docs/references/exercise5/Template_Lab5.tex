@@ -1,0 +1,280 @@
+% Prämabel
+\documentclass[11pt,a4paper]{article}
+
+% Codage
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{siunitx}
+\usepackage{indentfirst}
+
+% Langue
+\usepackage[english]{babel}
+
+% Supplément
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{verbatim} % pour faire des commentaires avec \begin{comment}...
+\usepackage{float} % pour positioner un image exacetement où on veut
+\usepackage
+  [separate-uncertainty = true,
+  multi-part-units = repeat]
+  {siunitx} % Exemple \SI{0}{\kg \cdot \m^{-3}}
+
+% Images
+\usepackage[pdftex]{graphicx}
+\usepackage{graphics}
+\usepackage{subcaption} % pour positioner des figures côte à côte
+\usepackage{wrapfig}
+
+% pour l'inclusion de liens dans le document 
+\usepackage[colorlinks,bookmarks=false,linkcolor=blue,urlcolor=blue]{hyperref}
+
+
+% la mise en page
+\usepackage{geometry}
+\paperheight=297mm
+\paperwidth=210mm
+
+\pagestyle{plain}
+
+
+
+% nouvelles commandes LaTeX, utilis\'ees comme abreviations utiles
+\newcommand{\mail}[1]{{\href{mailto:#1}{#1}}}
+\newcommand{\ftplink}[1]{{\href{ftp://#1}{#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+
+% Le titre, l'auteur et la date
+\title{Numerical Exercise \#5}
+\author{XXX YYYY\\  % \\ pour fin de ligne
+}
+\date{\today}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\newpage
+\section{Question \#1 Analytical solution}
+
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|c|}
+		\hline
+		U235& \\
+		U238& \\
+		Pu239& \\
+		X& \\
+		Y& \\
+		\hline
+	\end{tabular}
+	\caption{Initial atomic concentrations in $at/cm^{-3}$}
+\end{table}
+
+\section*{System of Equations}
+
+The system of equations to solve is:
+
+\[
+\begin{aligned}
+1. \quad \frac{dC_5}{dt} &= \Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) C_5, \\
+2. \quad \frac{dC_8}{dt} &= \Phi \left(-\sigma_c^{\text{U-238}} - \sigma_f^{\text{U-238}}\right) C_8, \\
+3. \quad \frac{dC_9}{dt} &= \Phi \left(-\sigma_c^{\text{Pu-239}} - \sigma_f^{\text{Pu-239}}\right) C_9 + \Phi \sigma_c^{\text{U-238}} C_8, \\
+4. \quad \frac{dC_X}{dt} &= -\Phi \sigma_c^X C_X + \Phi \sigma_f^{\text{U-235}} C_5 \eta^X - \lambda^X C_X, \\
+5. \quad \frac{dC_Y}{dt} &= -\Phi \sigma_c^Y C_Y + \Phi \sigma_f^{\text{U-235}} C_5 \eta^Y - \lambda^Y C_Y.
+\end{aligned}
+\]
+
+
+\subsection*{\(C_5(t)\):}
+
+The equation for \(C_5(t)\) is:
+
+\[
+\frac{dC_5}{dt} = \Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) C_5.
+\]
+
+The solution is:
+
+\[
+C_5(t) = C_5(0) e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t}.
+\]
+
+\subsection*{\(C_8(t)\):}
+
+The equation for \(C_8(t)\) is:
+
+\[
+\frac{dC_8}{dt} = \Phi \left(-\sigma_c^{\text{U-238}} - \sigma_f^{\text{U-238}}\right) C_8.
+\]
+
+The solution is:
+
+\[
+C_8(t) = C_8(0) e^{\Phi \left(-\sigma_c^{\text{U-238}} - \sigma_f^{\text{U-238}}\right) t}.
+\]
+
+The equation for \(C_9(t)\) is:
+
+\[
+\frac{dC_9}{dt} = \Phi \left(-\sigma_c^{\text{Pu-239}} - \sigma_f^{\text{Pu-239}}\right) C_9 + \Phi \sigma_c^{\text{U-238}} C_8.
+\]
+
+Substitute the solution for \(C_8(t)\):
+
+\[
+C_8(t) = C_8(0) e^{\Phi \left(-\sigma_c^{\text{U-238}} - \sigma_f^{\text{U-238}}\right) t}.
+\]
+
+The equation becomes:
+
+\[
+\frac{dC_9}{dt} = \Phi \left(-\sigma_c^{\text{Pu-239}} - \sigma_f^{\text{Pu-239}}\right) C_9 + \Phi \sigma_c^{\text{U-238}} C_8(0) e^{\Phi \left(-\sigma_c^{\text{U-238}} - \sigma_f^{\text{U-238}}\right) t}.
+\]
+
+Let:
+
+\[
+\kappa_{\text{Pu-239}} = \Phi \left(\sigma_c^{\text{Pu-239}} + \sigma_f^{\text{Pu-239}}\right), \quad
+\kappa_{\text{U-238}} = \Phi \left(\sigma_c^{\text{U-238}} + \sigma_f^{\text{U-238}}\right).
+\]
+
+The solution is:
+
+\[
+C_9(t) = C_9(0) e^{-\kappa_{\text{Pu-239}} t} + \frac{\Phi \sigma_c^{\text{U-238}} C_8(0)}{\kappa_{\text{Pu-239}} - \kappa_{\text{U-238}}} \left(e^{-\kappa_{\text{U-238}} t} - e^{-\kappa_{\text{Pu-239}} t}\right).
+\]
+
+\subsection*{\(C_X(t)\):}
+
+The equation for \(C_X(t)\) is:
+
+\[
+\frac{dC_X}{dt} = -\Phi \sigma_c^X C_X - \lambda^X C_X + \Phi \sigma_f^{\text{U-235}} C_5 \eta^X.
+\]
+
+Combine terms:
+
+\[
+\frac{dC_X}{dt} = -\left(\Phi \sigma_c^X + \lambda^X\right) C_X + \Phi \sigma_f^{\text{U-235}} \eta^X C_5.
+\]
+
+Let:
+
+\[
+\kappa_X = \Phi \sigma_c^X + \lambda^X.
+\]
+
+Substitute \(C_5(t)\):
+
+\[
+C_5(t) = C_5(0) e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t}.
+\]
+
+The equation becomes:
+
+\[
+\frac{dC_X}{dt} = -\kappa_X C_X + \Phi \sigma_f^{\text{U-235}} \eta^X C_5(0) e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t}.
+\]
+
+The solution is:
+
+\[
+C_X(t) = C_X(0) e^{-\kappa_X t} + \frac{\Phi \sigma_f^{\text{U-235}} \eta^X C_5(0)}{\kappa_X - \Phi \left(\sigma_c^{\text{U-235}} + \sigma_f^{\text{U-235}}\right)} \left(e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t} - e^{-\kappa_X t}\right).
+\]
+
+\subsection*{\(C_Y(t)\):}
+
+The equation for \(C_Y(t)\) is:
+
+\[
+\frac{dC_Y}{dt} = -\Phi \sigma_c^Y C_Y - \lambda^Y C_Y + \Phi \sigma_f^{\text{U-235}} C_5 \eta^Y.
+\]
+
+This is identical in form to the equation for \(C_X(t)\). The solution is:
+
+\[
+C_Y(t) = C_Y(0) e^{-\kappa_Y t} + \frac{\Phi \sigma_f^{\text{U-235}} \eta^Y C_5(0)}{\kappa_Y - \Phi \left(\sigma_c^{\text{U-235}} + \sigma_f^{\text{U-235}}\right)} \left(e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t} - e^{-\kappa_Y t}\right),
+\]
+
+where:
+
+\[
+\kappa_Y = \Phi \sigma_c^Y + \lambda^Y.
+\]
+
+The solutions to the system are:
+
+\[
+\begin{aligned}
+C_5(t) &= C_5(0) e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t}, \\
+C_8(t) &= C_8(0) e^{\Phi \left(-\sigma_c^{\text{U-238}} - \sigma_f^{\text{U-238}}\right) t}, \\
+C_9(t) &= C_9(0) e^{-\kappa_{\text{Pu-239}} t} + \frac{\Phi \sigma_c^{\text{U-238}} C_8(0)}{\kappa_{\text{Pu-239}} - \kappa_{\text{U-238}}} \left(e^{-\kappa_{\text{U-238}} t} - e^{-\kappa_{\text{Pu-239}} t}\right), \\
+C_X(t) &= C_X(0) e^{-\kappa_X t} + \frac{\Phi \sigma_f^{\text{U-235}} \eta^X C_5(0)}{\kappa_X - \Phi \left(\sigma_c^{\text{U-235}} + \sigma_f^{\text{U-235}}\right)} \left(e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t} - e^{-\kappa_X t}\right), \\
+C_Y(t) &= C_Y(0) e^{-\kappa_Y t} + \frac{\Phi \sigma_f^{\text{U-235}} \eta^Y C_5(0)}{\kappa_Y - \Phi \left(\sigma_c^{\text{U-235}} + \sigma_f^{\text{U-235}}\right)} \left(e^{\Phi \left(-\sigma_c^{\text{U-235}} - \sigma_f^{\text{U-235}}\right) t} - e^{-\kappa_Y t}\right).
+\end{aligned}
+\]
+
+Governing differential equations for each isotope (U235,U238,Pu239, X and Y):
+\begin{equation}
+	\frac{dN_{U235}}{dt} = ...; 
+	\frac{dN_{U238}}{dt} = ...; 
+	\frac{dN_{Pu239}}{dt} = ...; 	
+	\frac{dN_{X}}{dt} = ...; 
+	\frac{dN_{Y}}{dt} = ...;	 
+\end{equation}
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Evolution of the various isotopes concentrations in a semilog-Y scale between 0 and 365 days}
+\end{figure}
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Evolution of the various isotopes concentrations in a semilog-Y scale between 0 and 1 day}
+\end{figure}
+
+\section{Question \#2 Numerical solution}
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Evolution of the various isotopes concentrations in a semilog-Y scale  between 0 and 365 days with the Forward Euler method and a time-step of 1h}
+\end{figure}
+
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{convergence rate of Euler and Matrix exponential methodsin terms of time steps, varying the time step between 1min and 6h. The quantity of interest is the concentration of X after 1 day.}
+\end{figure}
+
+
+\section{Question \#3 Advanced Problem}
+ 
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Evolution of the flux level ($\phi [cm^{-2}.s^{-1}]$) as a function of time.}
+	\label{err}
+\end{figure}
+Explain the observed trends in Figure \ref{err} 
+
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Evolution of the various isotopes concentrations in a semilog-Y scale  between 0 and 365 days.}
+	\label{err2}
+\end{figure}
+
+
+
+%%%%%%%
+
+
+
+
+
+
+\end{document}
