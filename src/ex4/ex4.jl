@@ -19,8 +19,6 @@ end
 println("Exercise 3")
 Σa_f = 0.002
 Σa_s = 0.06
-νΣf_f = 0.001
-νΣf_s = 0.069
 Σ12 = 0.038
 a = 120
 b = 20
@@ -132,6 +130,10 @@ end
 Ds = [1.4824e+00  3.8138e-01  1.4854e+00  3.7045e-01  1.4850e+00  3.6760e-01  1.2000e+00  4.0000e-01]
 D1 = Ds[1:2:end]
 D2 = Ds[2:2:end]
+nusig_f  = [ 7.1695e-03  1.4038e-01  6.0022e-03  1.4267e-01  5.1128e-03  1.2765e-01  0.0000e+00  0.0000e+00]
+nusig_f_1  = nusig_f[1:2:end]
+nusig_f_2  = nusig_f[2:2:end]
+
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
     assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4]
@@ -145,16 +147,19 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     Σa_f    = [fill(0, nr)    ; fill(0.002, nc)  ;   fill(0.0, nr)]
     D_slow = fill(NaN,nt)
     D_fast = fill(NaN,nt)
+    νΣf_f_array = fill(NaN,nt)
+    νΣf_s_array = fill(NaN,nt)
     @show assemblies
     for (i, ia) in enumerate(assemblies)
         @show i
         @show ((i-1)*20 +1):((i)*20)
         for j in ((i-1)*20 +1):((i)*20)
-            D_slow[j] = D1[ia]
-            D_fast[j] = D2[ia]
+            D_fast[j] = D1[ia]
+            D_slow[j] = D2[ia]
+            νΣf_f_array[j] = nusig_f_1[ia]
+            νΣf_s_array[j] = nusig_f_2[ia]
         end
     end
-    @show D_slow
 
     # slow neutrons right hand side
     diffusion_slow = left_side(D_slow, Σa_s, nt, dx)
@@ -167,8 +172,6 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     ]
     println("A")
     display(A)
-    νΣf_f_array = [zeros(nr) ; νΣf_f * ones(nc) ; zeros(nr)]
-    νΣf_s_array = [zeros(nr) ; νΣf_s * ones(nc) ; zeros(nr)]
     # fast, slow
     # the minus is important
     F = - [
