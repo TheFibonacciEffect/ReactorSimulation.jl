@@ -17,8 +17,6 @@ function get_B(x,y)
 end
 
 println("Exercise 3")
-D_fast = 1.13
-D_slow = 0.16
 Σa_f = 0.002
 Σa_s = 0.06
 νΣf_f = 0.001
@@ -99,64 +97,16 @@ function compute_flux(D_s, D_f, B, Σ_as, Σ_af, Σ_1_to_2, νΣ_ff, νΣ_fs, k,
 end
 
 
-
-function reactor_without_reflector(dx; save = false, do_plot=false, verbose=false, max=false, error=false)
-    println("------- start run for bare reactor ------")
-    # numerical Parameters
-    l = 2a
-    n = l ÷ dx -1 |> Int
-    x =  range(-l/2, l/2,n)
-    # slow neutrons right hand side
-    diffusion_slow = left_side(D_slow, Σa_s, n, dx)
-    # fast neutrons right hand side
-    diffusion_fast = left_side(D_fast, Σa_f, n, dx)
-    # Assume Φf; Φs
-    A = [
-        diffusion_fast-Σ12 *I   spzeros(n,n)
-        + Σ12 * I               diffusion_slow 
-    ]
-    println("A")
-    display(A)
-    # fast, slow
-    # the minus is important
-    F = - [
-        νΣf_f * I νΣf_s * I
-        spzeros(n,n) spzeros(n,n)
-    ]
-    println("F")
-    display(F)
-    # make sparse matrecies dense
-    A = Matrix(A)
-    F = Matrix(F)
-    M = inv(A) * F
-    @show k = eigvals(M)[end]
-    phi = eigvecs(M)[:,end]
-    phi = real.(phi)
-    phi = phi ./ phi[n ÷ 2]
-    fast = phi[1:n]
-    slow = phi[n+1:end]
-    @show B = π/(2a)
-    if error
-        ϕ = compute_flux(D_slow,D_fast,B,Σa_s, Σa_f,Σ12, νΣf_f, νΣf_s, calculate_k(l,0),[1, 1])
-        ϕf, ϕs = ϕ./ϕ[1]
-        fa = analytical_reactor_without_reflector.(x,ϕf)
-        sl = analytical_reactor_without_reflector.(x,ϕs)
-        plot(x,fast - fa, label="error fast")
-        return plot!(x, slow - sl, label="error slow") 
-        # plot(x,fa, label="error fast")
-        # return plot!(x, sl, label="error slow")
-    end
-    @show get_B(x,fast)
-    @show get_B(x,slow)
-    p1 = plot(x,fast, label="fast neutrons")
-    plot!(x,slow, label="slow neutrons")
-end
-# functions for reactor with reflector
-
-function beta(i,D)
+function beta(i,D,n)
     # im using a beta without dx here
     # for i+1 it would be
     # return 2 * Di *Dip1/(Dip1+Di)
+    @show i
+    if i == 1 || i == 0
+        return 2*D[1] * D[1] / (D[1] + D[1])
+    elseif  i == n || i == n
+        return 2*D[end] * D[end] / (D[end] + D[end])
+    end
     return 2*D[i-1] * D[i] / (D[i] + D[i-1])
 end
 
@@ -165,16 +115,17 @@ function left_side(D,Σa::Array,n, dx)
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     # not nessesary, because the diffision length is the same
     streaming = spzeros(n,n)
-    # streaming[1,1] 
-    # streaming[end,end]
-    # for i = 2:n-1
-    #     streaming[i,i] = - beta(i+1,D)/dx^2 - beta(i-1,D)/dx^2
-    #     streaming[i,i-1] = + beta(i-1,D)/dx^2
-    #     streaming[i,i+1] = + beta(i+1,D) / dx^2
-    # end
+    streaming[1,1] = -2*D[1]/dx^2
+    streaming[end,end] =  -2*D[end]/dx^2
+    for i = 2:n-1
+        @show i
+        streaming[i,i] = - beta(i+1,D,n)/dx^2 - beta(i-1,D,n)/dx^2
+        streaming[i,i-1] = + beta(i-1,D,n)/dx^2
+        streaming[i,i+1] = + beta(i+1,D,n) / dx^2
+    end
     # apply_inner!(streaming, n,dx,D)
-    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
-    streaming = D* laplace
+    # laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    # streaming = D* laplace
     collision = - spdiagm(0 => Σa)
     M = streaming + collision
 end
@@ -189,6 +140,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     x =  range(-l/2, l/2,nt) 
     Σa_s    = [fill(0.012, nr); fill(0.06, nc)   ;   fill(0.012, nr)]
     Σa_f    = [fill(0, nr)    ; fill(0.002, nc)  ;   fill(0.0, nr)]
+    D_slow = fill(0.16,nt)
+    D_fast = fill(1.13,nt)
     # slow neutrons right hand side
     diffusion_slow = left_side(D_slow, Σa_s, nt, dx)
     # fast neutrons right hand side
@@ -229,13 +182,6 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     plot!(x,phi[nt+1:end], label="slow neutrons")
 end
 
-# run the code
-reactor_without_reflector(0.1)
-savefig("docs/figs/ex3/bare.png")
-println("file saved to: docs/figs/ex3/bare.png")
 reactor_with_reflector(0.1)
-savefig("docs/figs/ex3/reflected.png")
-println("file saved to: docs/figs/ex3/reflected.png")
-reactor_without_reflector(0.1,error=true)
-savefig("docs/figs/ex3/error.png")
-println("file saved to: docs/figs/ex3/error.png")
+savefig("docs/figs/ex4/neutrons_core.png")
+println("file saved to: docs/figs/ex4/neutrons_core.png")
