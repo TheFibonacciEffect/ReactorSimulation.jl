@@ -22,8 +22,8 @@ println("Exercise 3")
 νΣf_f = 0.001
 νΣf_s = 0.069
 Σ12 = 0.038
-a = 50
-b = 10
+a = 120
+b = 20
 
 round5(x) = round(x, digits=5)
 function calculate_k(a,d)
@@ -101,7 +101,6 @@ function beta(i,D,n)
     # im using a beta without dx here
     # for i+1 it would be
     # return 2 * Di *Dip1/(Dip1+Di)
-    @show i
     if i == 1 || i == 0
         return 2*D[1] * D[1] / (D[1] + D[1])
     elseif  i == n || i == n
@@ -118,7 +117,6 @@ function left_side(D,Σa::Array,n, dx)
     streaming[1,1] = -2*D[1]/dx^2
     streaming[end,end] =  -2*D[end]/dx^2
     for i = 2:n-1
-        @show i
         streaming[i,i] = - beta(i+1,D,n)/dx^2 - beta(i-1,D,n)/dx^2
         streaming[i,i-1] = + beta(i-1,D,n)/dx^2
         streaming[i,i+1] = + beta(i+1,D,n) / dx^2
@@ -130,8 +128,13 @@ function left_side(D,Σa::Array,n, dx)
     M = streaming + collision
 end
 
+# diffusion coefficients for the different assemblies
+Ds = [1.4824e+00  3.8138e-01  1.4854e+00  3.7045e-01  1.4850e+00  3.6760e-01  1.2000e+00  4.0000e-01]
+D1 = Ds[1:2:end]
+D2 = Ds[2:2:end]
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
+    assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4]
     # numerical Parameters
     l = 2a + 2b
     nc = 2a ÷ dx |> Int
@@ -140,8 +143,19 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     x =  range(-l/2, l/2,nt) 
     Σa_s    = [fill(0.012, nr); fill(0.06, nc)   ;   fill(0.012, nr)]
     Σa_f    = [fill(0, nr)    ; fill(0.002, nc)  ;   fill(0.0, nr)]
-    D_slow = fill(0.16,nt)
-    D_fast = fill(1.13,nt)
+    D_slow = fill(NaN,nt)
+    D_fast = fill(NaN,nt)
+    @show assemblies
+    for (i, ia) in enumerate(assemblies)
+        @show i
+        @show ((i-1)*20 +1):((i)*20)
+        for j in ((i-1)*20 +1):((i)*20)
+            D_slow[j] = D1[ia]
+            D_fast[j] = D2[ia]
+        end
+    end
+    @show D_slow
+
     # slow neutrons right hand side
     diffusion_slow = left_side(D_slow, Σa_s, nt, dx)
     # fast neutrons right hand side
@@ -180,8 +194,10 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     phi = phi ./ phi[nc ÷ 2]
     p1 = plot(x,phi[1:nt], label="fast neutrons")
     plot!(x,phi[nt+1:end], label="slow neutrons")
+    p2 = twinx(p1)
+    plot!(p2,x, D_slow,label="D slow")
 end
 
-reactor_with_reflector(0.1)
+reactor_with_reflector(1)
 savefig("docs/figs/ex4/neutrons_core.png")
 println("file saved to: docs/figs/ex4/neutrons_core.png")
