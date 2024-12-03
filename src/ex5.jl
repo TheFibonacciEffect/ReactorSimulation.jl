@@ -20,7 +20,7 @@ t_half = Dict("U-235" => "stable", "U-238" => "stable", "Pu-239" => "stable", "X
 # Fission yields (FY)
 fy = Dict("U-235" => 0. , "U-238" => 0. , "Pu-239" => 0. , "X" => 0.06, "Y" => 1.94)
 
-Φ = 1e15 # * (60^2*24) # to neutrons per barn per day
+Φ = 1e13 # * (60^2*24) # to neutrons per barn per day
 b = 1e-24 #barns in cm^2 
 κ = 3.2e-11
 println("Cross-section (capture) for Pu-239: ", sig_c["Pu-239"])
