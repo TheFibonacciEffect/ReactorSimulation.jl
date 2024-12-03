@@ -17,8 +17,6 @@ function get_B(x,y)
 end
 
 println("Exercise 3")
-Σa_f = 0.002
-Σa_s = 0.06
 Σ12 = 0.038
 a = 120
 b = 20
@@ -133,6 +131,9 @@ D2 = Ds[2:2:end]
 nusig_f  = [ 7.1695e-03  1.4038e-01  6.0022e-03  1.4267e-01  5.1128e-03  1.2765e-01  0.0000e+00  0.0000e+00]
 nusig_f_1  = nusig_f[1:2:end]
 nusig_f_2  = nusig_f[2:2:end]
+sig_a = [ 9.6159e-03  8.2153e-02  1.0577e-02  9.5616e-02  1.1109e-02  9.3004e-02  1.0000e-03  2.0000e-02]
+sig_a_1  = sig_a[1:2:end]
+sig_a_2  = sig_a[2:2:end]
 
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
@@ -143,8 +144,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     nr = b ÷ dx |> Int
     nt = 2*nr + nc
     x =  range(-l/2, l/2,nt) 
-    Σa_s    = [fill(0.012, nr); fill(0.06, nc)   ;   fill(0.012, nr)]
-    Σa_f    = [fill(0, nr)    ; fill(0.002, nc)  ;   fill(0.0, nr)]
+    Σa_f    = fill(NaN,nt)
+    Σa_s    = fill(NaN,nt)
     D_slow = fill(NaN,nt)
     D_fast = fill(NaN,nt)
     νΣf_f_array = fill(NaN,nt)
@@ -158,6 +159,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
             D_slow[j] = D2[ia]
             νΣf_f_array[j] = nusig_f_1[ia]
             νΣf_s_array[j] = nusig_f_2[ia]
+            Σa_f[j]    = sig_a_1[ia]
+            Σa_s[j]    = sig_a_2[ia]
         end
     end
 
@@ -198,7 +201,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     p1 = plot(x,phi[1:nt], label="fast neutrons")
     plot!(x,phi[nt+1:end], label="slow neutrons")
     p2 = twinx(p1)
-    plot!(p2,x, D_slow,label="D slow")
+    # plot!(p2,x, D_slow,label="D slow")
+    plot!(p2,x, Σa_f,label="Σa_f")
 end
 
 reactor_with_reflector(1)
