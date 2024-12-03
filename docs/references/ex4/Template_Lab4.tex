@@ -1,0 +1,122 @@
+% Prämabel
+\documentclass[11pt,a4paper]{article}
+
+% Codage
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{siunitx}
+\usepackage{indentfirst}
+
+% Langue
+\usepackage[english]{babel}
+
+% Supplément
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{verbatim} % pour faire des commentaires avec \begin{comment}...
+\usepackage{float} % pour positioner un image exacetement où on veut
+\usepackage
+  [separate-uncertainty = true,
+  multi-part-units = repeat]
+  {siunitx} % Exemple \SI{0}{\kg \cdot \m^{-3}}
+
+% Images
+\usepackage[pdftex]{graphicx}
+\usepackage{graphics}
+\usepackage{subcaption} % pour positioner des figures côte à côte
+\usepackage{wrapfig}
+
+% pour l'inclusion de liens dans le document 
+\usepackage[colorlinks,bookmarks=false,linkcolor=blue,urlcolor=blue]{hyperref}
+
+
+% la mise en page
+\usepackage{geometry}
+\paperheight=297mm
+\paperwidth=210mm
+
+\pagestyle{plain}
+
+
+
+% nouvelles commandes LaTeX, utilis\'ees comme abreviations utiles
+\newcommand{\mail}[1]{{\href{mailto:#1}{#1}}}
+\newcommand{\ftplink}[1]{{\href{ftp://#1}{#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+
+% Le titre, l'auteur et la date
+\title{Numerical Exercise \#4}
+\author{XXX YYYY\\  % \\ pour fin de ligne
+}
+\date{\today}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\newpage
+\section{Question \#1 Initial Loading Pattern}
+
+keff (scientific format with 5 significant digits): \\
+
+peak power (scientific format with 5 significant digits): \\
+
+fast flux at the core boundary (scientific format with 5 significant digits): \\
+
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Normalized fast and thermal fluxes}
+\end{figure}
+
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Relative power distribution}
+\end{figure}
+
+Explanation of the main features of the power distribution:\\
+
+
+\section{Question \#2 Optimized Loading Pattern}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		1& 1& 1& 1& 1& 1& 4\\
+		\hline
+	\end{tabular}
+	\caption{Loading pattern from the core center (left to right)}
+\end{table}
+
+keff (scientific format with 5 significant digits): \\
+
+peak power (scientific format with 2 significant digits): \\
+
+fast flux at the core boundary (scientific format with 2 significant digits): \\
+
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Normalized fast and thermal fluxes}
+\end{figure}
+
+\begin{figure}[h]
+	%\includegraphics[width=7cm]{IMage/SSjeff33_Al_geom1.png}
+	\centering
+	\caption{Relative power distribution}
+\end{figure}
+
+
+
+%%%%%%%
+
+
+
+
+
+
+\end{document}
