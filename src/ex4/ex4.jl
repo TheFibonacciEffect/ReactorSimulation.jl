@@ -137,7 +137,8 @@ sig_a_2  = sig_a[2:2:end]
 
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
-    assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4]
+    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4]
+    assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4]
     # numerical Parameters
     l = 2a + 2b
     nc = 2a ÷ dx |> Int
