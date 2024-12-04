@@ -134,12 +134,15 @@ nusig_f_2  = nusig_f[2:2:end]
 sig_a = [ 9.6159e-03  8.2153e-02  1.0577e-02  9.5616e-02  1.1109e-02  9.3004e-02  1.0000e-03  2.0000e-02]
 sig_a_1  = sig_a[1:2:end]
 sig_a_2  = sig_a[2:2:end]
-
+from_1 =  [1.9788e-01  1.7369e-02  1.9748e-01  1.6350e-02  1.9754e-01  1.5815e-02  2.5178e-01  2.5000e-02]
+from_2 = [1.6271e-03  7.9024e-01  1.8467e-03  8.0234e-01  1.8112e-03  8.1197e-01  0.0000e+00  8.1333e-01]
+sig_12 = from_1[2:2:end]
+sig_21 = from_2[1:2:end]
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
-    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4]
-    # assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4]
-    assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4]
+    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
+    assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
+    # assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
     # numerical Parameters
     l = 2a + 2b
     nc = 2a ÷ dx |> Int
@@ -152,6 +155,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     D_fast = fill(NaN,nt)
     νΣf_f_array = fill(NaN,nt)
     νΣf_s_array = fill(NaN,nt)
+    Σ12 = fill(NaN,nt)
+    Σ21 = fill(NaN,nt)
     @show assemblies
     for (i, ia) in enumerate(assemblies)
         @show i
@@ -163,6 +168,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
             νΣf_s_array[j] = nusig_f_2[ia]
             Σa_f[j]    = sig_a_1[ia]
             Σa_s[j]    = sig_a_2[ia]
+            Σ12[j] = sig_12[ia]
+            Σ21[j] = sig_21[ia]
         end
     end
 
@@ -172,8 +179,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     diffusion_fast = left_side(D_fast, Σa_f, nt, dx)
     # Assume Φf; Φs
     A = [
-        diffusion_fast-Σ12 *I   spzeros(nt,nt)
-        + Σ12 * I               diffusion_slow 
+        diffusion_fast- spdiagm(Σ12)    spdiagm(Σ21)
+        + spdiagm(Σ12)                  diffusion_slow  - spdiagm(Σ21)
     ]
     println("A")
     display(A)
