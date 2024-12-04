@@ -16,8 +16,7 @@ function get_B(x,y)
     fit_cos(x,y).param[2]#maybe sqrt
 end
 
-println("Exercise 3")
-Σ12 = 0.038
+println("Exercise 4")
 a = 120
 b = 20
 
@@ -212,7 +211,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     p2 = twinx(p1)
     # plot!(p2,x, D_slow,label="D slow")
     # plot!(p2,x, Σa_f,label="Σa_f")
-    plot!(p2,x, νΣf_f_array,label="νΣf_f_array", legend=:bottomright)
+    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomright)
+    plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomright)
 end
 
 reactor_with_reflector(1)
