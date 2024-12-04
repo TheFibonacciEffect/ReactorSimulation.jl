@@ -45,18 +45,6 @@ function analytical_reactor_without_reflector(x,A)
     A*cos(B*x)
 end
 
-# function right_side(B,D,Σa)
-#     laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
-#     streaming = - D* laplace
-#     collision = +  spdiagm(0=> ones(n)) * Σa
-#     M = streaming + collision
-# end
-function left_side(D,Σa,n, dx)
-    laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
-    streaming = D* laplace
-    collision = - Σa * I
-    M = streaming + collision
-end
 
 function compute_flux(D_s, D_f, B, Σ_as, Σ_af, Σ_1_to_2, νΣ_ff, νΣ_fs, k, ϕ_guess)
     # Compute the determinant of A
@@ -195,8 +183,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     A = Matrix(A)
     F = Matrix(F)
     M = inv(A) * F
-    @show k = eigvals(M)[end-1]
-    phi = eigvecs(M)[:,end-1]
+    @time k = eigvals(M)[end-1]
+    @time phi = eigvecs(M)[:,end-1]
     phi = real.(phi)
     phi = phi ./ phi[nc ÷ 2]
     p1 = plot(x,phi[1:nt], label="fast neutrons")
