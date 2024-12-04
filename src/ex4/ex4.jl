@@ -202,7 +202,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     plot!(x,phi[nt+1:end], label="slow neutrons")
     p2 = twinx(p1)
     # plot!(p2,x, D_slow,label="D slow")
-    plot!(p2,x, Σa_f,label="Σa_f")
+    # plot!(p2,x, Σa_f,label="Σa_f")
+    plot!(p2,x, νΣf_f_array,label="νΣf_f_array")
 end
 
 reactor_with_reflector(1)
