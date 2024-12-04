@@ -138,7 +138,8 @@ sig_a_2  = sig_a[2:2:end]
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
     # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4]
-    assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4]
+    # assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4]
+    assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4]
     # numerical Parameters
     l = 2a + 2b
     nc = 2a ÷ dx |> Int
@@ -204,7 +205,7 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     p2 = twinx(p1)
     # plot!(p2,x, D_slow,label="D slow")
     # plot!(p2,x, Σa_f,label="Σa_f")
-    plot!(p2,x, νΣf_f_array,label="νΣf_f_array")
+    plot!(p2,x, νΣf_f_array,label="νΣf_f_array", legend=:bottomright)
 end
 
 reactor_with_reflector(1)
