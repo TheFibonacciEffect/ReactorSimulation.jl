@@ -127,8 +127,8 @@ sig_12 = from_1[2:2:end]
 sig_21 = from_2[1:2:end]
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
-    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
-    assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
+    assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
+    # assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
     # assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
     # numerical Parameters
     l = 2a + 2b
@@ -199,8 +199,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     p2 = twinx(p1)
     # plot!(p2,x, D_slow,label="D slow")
     # plot!(p2,x, Σa_f,label="Σa_f")
-    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomright)
-    plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomright)
+    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomright, color=:red, linestyle=:dash)
+    plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomright, color=:green, linestyle=:dash)
 end
 
 reactor_with_reflector(1)
