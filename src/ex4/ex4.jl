@@ -183,15 +183,24 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     A = Matrix(A)
     F = Matrix(F)
     M = inv(A) * F
-    @time k = eigvals(M)[end-1]
-    @time phi = eigvecs(M)[:,end-1]
+    @time eigv = eigvals(M)
+    @time eigenvectors = eigvecs(M)
+    phi = eigenvectors[:,end-2]
+    k = eigv[end-2]
+    phi = real.(phi)
+    phi = phi ./ phi[nc ÷ 2]
+    p1 = plot(x,phi[1:nt], label="fast neutrons")
+    plot!(x,phi[nt+1:end], label="slow neutrons")
+    savefig("docs/figs/ex4/second_harmonic_reflected.png")
+    phi = eigenvectors[:,end-1]
+    k = eigv[end-1]
     phi = real.(phi)
     phi = phi ./ phi[nc ÷ 2]
     p1 = plot(x,phi[1:nt], label="fast neutrons")
     plot!(x,phi[nt+1:end], label="slow neutrons")
     savefig("docs/figs/ex4/fist_harmonic_reflected.png")
-    @show k = eigvals(M)[end]
-    phi = eigvecs(M)[:,end]
+    @show k = eigv[end]
+    phi = eigenvectors[:,end]
     phi = real.(phi)
     phi = phi ./ phi[nc ÷ 2]
     p1 = plot(x,phi[1:nt], label="fast neutrons")
