@@ -92,7 +92,7 @@ function beta(i,D,n)
     return 2*D[i-1] * D[i] / (D[i] + D[i-1])
 end
 
-function left_side(D,Σa::Array,n, dx)
+function left_side(D,Σa::Array,n, dx, half_core)
     println("left side with arrays")
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     # not nessesary, because the diffision length is the same
@@ -105,7 +105,7 @@ function left_side(D,Σa::Array,n, dx)
         streaming[i-1,i] = + beta(i+1,D,n) / dx^2
     end
     streaming[end,end-1] = + beta(n-1,D,n)/dx^2
-        streaming[end-1,end] = + beta(n,D,n) / dx^2
+    streaming[end-1,end] = + beta(n,D,n) / dx^2
     streaming[end,end] =  -2*D[end]/dx^2 + 2*D[end]/(
         (dx/
         (4D[end])
@@ -137,10 +137,9 @@ sig_21 = from_2[1:2:end]
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
     # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
-    assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
+    assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
     # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
-    assemblies = fill(1,14)
-    @show length(assemblies)
+    # assemblies = fill(1,14)
     # assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
     # assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
     # numerical Parameters
@@ -148,6 +147,7 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     nc = 2a ÷ dx |> Int
     nr = b ÷ dx |> Int
     nt = 2*nr + nc
+    ass_length = nt ÷ length(assemblies)
     x =  range(-l/2, l/2,nt) 
     Σa_f    = fill(NaN,nt)
     Σa_s    = fill(NaN,nt)
@@ -160,8 +160,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     @show assemblies
     for (i, ia) in enumerate(assemblies)
         @show i
-        @show ((i-1)*20 +1):((i)*20)
-        for j in ((i-1)*20 +1):((i)*20)
+        @show ((i-1)*ass_length +1):((i)*ass_length)
+        for j in ((i-1)*ass_length +1):((i)*ass_length)
             D_fast[j] = D1[ia]
             D_slow[j] = D2[ia]
             νΣf_f_array[j] = nusig_f_1[ia]
@@ -172,11 +172,11 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
             Σ21[j] = sig_21[ia]
         end
     end
-
+    half_core = true
     # slow neutrons right hand side
-    diffusion_slow = left_side(D_slow, Σa_s, nt, dx)
+    diffusion_slow = left_side(D_slow, Σa_s, nt, dx, half_core)
     # fast neutrons right hand side
-    diffusion_fast = left_side(D_fast, Σa_f, nt, dx)
+    diffusion_fast = left_side(D_fast, Σa_f, nt, dx, half_core)
     # Assume Φf; Φs
     A = [
         diffusion_fast- spdiagm(Σ12)    spdiagm(Σ21)
@@ -221,8 +221,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     p2 = twinx(p1)
     # plot!(p2,x, D_slow,label="D slow")
     # plot!(p2,x, Σa_f,label="Σa_f")
-    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomright, color=:red, linestyle=:dash)
-    plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomright, color=:green, linestyle=:dash)
+    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomleft, color=:red, linestyle=:dash)
+    plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomleft, color=:green, linestyle=:dash)
 end
 
 reactor_with_reflector(1)
