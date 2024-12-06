@@ -97,7 +97,6 @@ function left_side(D,Σa::Array,n, dx, half_core)
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     # not nessesary, because the diffision length is the same
     streaming = spzeros(n,n)
-    streaming[1,1] = -1*D[1]/dx^2
     
     for i = 2:n-1
         streaming[i,i] = - beta(i+1,D,n)/dx^2 - beta(i-1,D,n)/dx^2
@@ -106,11 +105,28 @@ function left_side(D,Σa::Array,n, dx, half_core)
     end
     streaming[end,end-1] = + beta(n-1,D,n)/dx^2
     streaming[end-1,end] = + beta(n,D,n) / dx^2
-    streaming[end,end] =  -2*D[end]/dx^2 + 2*D[end]/(
-        (dx/
-        (4D[end])
-         + 1) * dx^2
-        )
+    if half_core
+        streaming[1,1] = -1*D[1]/dx^2
+        streaming[end,end] =  -2*D[end]/dx^2 + 2*D[end]/(
+            (dx/
+            (4D[end])
+            + 1) * dx^2
+            )
+    else
+        println("not half core")
+        streaming[1,1] = -2*D[1]/dx^2
+        streaming[end,end] = -2*D[end]/dx^2
+        # streaming[1,1] = -2*D[1]/dx^2 + 2*D[1]/(
+        #     (dx/
+        #     (4D[1])
+        #     + 1) * dx^2
+        #     )
+        # streaming[end,end] = -2*D[end]/dx^2 + 2*D[end]/(
+        #     (dx/
+        #     (4D[end])
+        #     + 1) * dx^2
+        #     )
+    end
     display(streaming[1:5,1:5])
     display(streaming[end-5:end,end-5:end])
     # apply_inner!(streaming, n,dx,D)
@@ -137,11 +153,12 @@ sig_21 = from_2[1:2:end]
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
     # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
-    assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
-    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
     # assemblies = fill(1,14)
+    assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
     # assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
     # assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
+    # for the half core
+    # assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
     # numerical Parameters
     l = 2a + 2b
     nc = 2a ÷ dx |> Int
@@ -172,7 +189,7 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
             Σ21[j] = sig_21[ia]
         end
     end
-    half_core = true
+    half_core = false
     # slow neutrons right hand side
     diffusion_slow = left_side(D_slow, Σa_s, nt, dx, half_core)
     # fast neutrons right hand side
