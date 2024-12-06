@@ -97,13 +97,22 @@ function left_side(D,Σa::Array,n, dx)
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     # not nessesary, because the diffision length is the same
     streaming = spzeros(n,n)
-    streaming[1,1] = -2*D[1]/dx^2
-    streaming[end,end] =  -2*D[end]/dx^2
+    streaming[1,1] = -1*D[1]/dx^2
+    
     for i = 2:n-1
         streaming[i,i] = - beta(i+1,D,n)/dx^2 - beta(i-1,D,n)/dx^2
         streaming[i,i-1] = + beta(i-1,D,n)/dx^2
-        streaming[i,i+1] = + beta(i+1,D,n) / dx^2
+        streaming[i-1,i] = + beta(i+1,D,n) / dx^2
     end
+    streaming[end,end-1] = + beta(n-1,D,n)/dx^2
+        streaming[end-1,end] = + beta(n,D,n) / dx^2
+    streaming[end,end] =  -2*D[end]/dx^2 + 2*D[end]/(
+        (dx/
+        (4D[end])
+         + 1) * dx^2
+        )
+    display(streaming[1:5,1:5])
+    display(streaming[end-5:end,end-5:end])
     # apply_inner!(streaming, n,dx,D)
     # laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     # streaming = D* laplace
@@ -127,7 +136,11 @@ sig_12 = from_1[2:2:end]
 sig_21 = from_2[1:2:end]
 function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
+    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
     assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
+    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
+    assemblies = fill(1,14)
+    @show length(assemblies)
     # assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
     # assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
     # numerical Parameters
