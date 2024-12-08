@@ -92,7 +92,7 @@ end
 
 function left_side(D,Σa::Array,n, dx, half_core)
     println("left side with arrays")
-    open_boundary = true # TODO
+    open_boundary = false # TODO: true leads to negative values for phi[nt]
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     # not nessesary, because the diffision length is the same
     streaming = spzeros(n,n)
@@ -211,7 +211,7 @@ function reactor_with_reflector(dx, assemblies, half_core; optimization = false,
     A = Matrix(A)
     F = Matrix(F)
     M = inv(A) * F
-    # eigv = eigvals(M)
+    eigv = eigvals(M)
     eigenvectors = eigvecs(M)
 
     for i in 0:2
@@ -219,11 +219,14 @@ function reactor_with_reflector(dx, assemblies, half_core; optimization = false,
         phi = real.(phi)
         p_nom_core = 90 # MW
         h = 400 # cm
-        @show P_fiss = sum(h*dx* ksig_f_1_array .* phi[1:nt] + h*dx* ksig_f_2_array .* phi[nt+1:end])
-        @show F = p_nom_core / P_fiss
+        P_fiss = sum(h*dx* ksig_f_1_array .* phi[1:nt] + h*dx* ksig_f_2_array .* phi[nt+1:end])
+        F = p_nom_core / P_fiss
         phi = F * phi
+        @show k = eigv[end-i]
         if optimization
             boundary_index = nt - ass_length
+            @show phi[nt]
+            @show phi[end]
             return phi[nt - boundary_index], phi[end - boundary_index]
         end
         p1 = plot(x,phi[1:nt], label="fast neutrons")
@@ -246,4 +249,4 @@ end
 assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
 
 @show reactor_with_reflector(1, assemblies, true; optimization = false)
-@show reactor_with_reflector(1, assemblies, true; optimization = true)
+reactor_with_reflector(1, assemblies, true; optimization = true)
