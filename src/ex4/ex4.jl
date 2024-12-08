@@ -154,12 +154,11 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
     sig_21 = from_2[1:2:end]
 
     # numerical Parameters
-    l = 2a + 2b
+    l = a + b
     nc = 2a ÷ dx |> Int
-    nr = b ÷ dx |> Int
-    nt = 2*nr + nc
+    nt = l ÷ dx |> Int
     ass_length = nt ÷ length(assemblies)
-    x =  range(-l/2, l/2,nt) 
+    x =  range(0, l,nt) 
     Σa_f    = fill(NaN,nt)
     Σa_s    = fill(NaN,nt)
     D_slow = fill(NaN,nt)
