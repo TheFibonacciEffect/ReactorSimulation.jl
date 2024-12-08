@@ -130,8 +130,8 @@ function left_side(D,Σa::Array,n, dx, half_core)
         #     + 1) * dx^2
         #     )
     end
-    display(streaming[1:5,1:5])
-    display(streaming[end-5:end,end-5:end])
+    # display(streaming[1:5,1:5])
+    # display(streaming[end-5:end,end-5:end])
     # apply_inner!(streaming, n,dx,D)
     # laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
     # streaming = D* laplace
@@ -177,8 +177,6 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
     Σ21 = fill(NaN,nt)
     @show assemblies
     for (i, ia) in enumerate(assemblies)
-        @show i
-        @show ((i-1)*ass_length +1):((i)*ass_length)
         for j in ((i-1)*ass_length +1):((i)*ass_length)
             D_fast[j] = D1[ia]
             D_slow[j] = D2[ia]
@@ -199,22 +197,18 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
         diffusion_fast- spdiagm(Σ12)    spdiagm(Σ21)
         + spdiagm(Σ12)                  diffusion_slow  - spdiagm(Σ21)
     ]
-    println("A")
-    display(A)
     # fast, slow
     # the minus is important
     F = - [
         spdiagm(0 => νΣf_f_array)  spdiagm(0 => νΣf_s_array)
         spzeros(nt,nt) spzeros(nt,nt)
     ]
-    println("F")
-    display(F)
     # make sparse matrecies dense
     A = Matrix(A)
     F = Matrix(F)
     M = inv(A) * F
-    @time eigv = eigvals(M)
-    @time eigenvectors = eigvecs(M)
+    # eigv = eigvals(M)
+    eigenvectors = eigvecs(M)
 
     for i in 0:2
         phi = eigenvectors[:,end-i]
@@ -239,4 +233,7 @@ end
 # for the half core
 assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
 
-reactor_with_reflector(1, assemblies, true)
+@time reactor_with_reflector(1, assemblies, true)
+@time reactor_with_reflector(1, assemblies, true)
+@time reactor_with_reflector(1, assemblies, true)
+@time reactor_with_reflector(1, assemblies, true)
