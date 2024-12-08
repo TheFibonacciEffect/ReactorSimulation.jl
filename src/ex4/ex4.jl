@@ -5,6 +5,10 @@ using Plots
 using LinearAlgebra
 using Statistics
 using LsqFit
+using Optim
+
+println("Im using Optim for the optimization, I am sorry that it takes so long to compile ...")
+println("I know its a heavy Dependency, but its also really good")
 
 function fit_cos(x,y)
     f(x,p) = @. p[1] * cos(p[2]*x)
@@ -162,10 +166,13 @@ function reactor_with_reflector(dx, assemblies, half_core; optimization = false,
     ksig_f_2 = ksig_f[2:2:end]
 
     # numerical Parameters
-    l = a + b
-    nc = 2a ÷ dx |> Int
+    λ_fast = 1/(sig_a_1[end] )
+    λ_slow = 1/(sig_a_2[end] )
+    extrapolatedLength = 0.71 * λ_fast
+    l = a + b + extrapolatedLength
+    nc = (a+b) ÷ dx |> Int
     nt = l ÷ dx |> Int
-    ass_length = nt ÷ length(assemblies)
+    ass_length = nc ÷ length(assemblies)
     x =  range(0, l,nt) 
     Σa_f    = fill(NaN,nt)
     Σa_s    = fill(NaN,nt)
@@ -191,6 +198,19 @@ function reactor_with_reflector(dx, assemblies, half_core; optimization = false,
             ksig_f_1_array[j] = ksig_f_1[ia]
             ksig_f_2_array[j] = ksig_f_2[ia]
         end
+    end
+    # the extrapolated length is filled with reflector
+    for i in nc:nt
+        D_fast[i] = D1[4]
+        D_slow[i] = D2[4]
+        νΣf_f_array[i] = nusig_f_1[4]
+        νΣf_s_array[i] = nusig_f_2[4]
+        Σa_f[i]    = sig_a_1[4]
+        Σa_s[i]    = sig_a_2[4]
+        Σ12[i] = sig_12[4]
+        Σ21[i] = sig_21[4]
+        ksig_f_1_array[i] = ksig_f_1[4]
+        ksig_f_2_array[i] = ksig_f_2[4]
     end
     # slow neutrons right hand side
     diffusion_slow = left_side(D_slow, Σa_s, nt, dx, half_core)
@@ -227,13 +247,17 @@ function reactor_with_reflector(dx, assemblies, half_core; optimization = false,
             boundary_index = nt - ass_length
             @show phi[nt]
             @show phi[end]
-            return phi[nt - boundary_index], phi[end - boundary_index]
+            # fast group at core + reflector boundary, slow group
+            # nc is core + reflector
+            # nt is total: core + reflector + exrapolated length
+            return phi[nc], phi[nt + nc]
         end
         p1 = plot(x,phi[1:nt], label="fast neutrons")
         plot!(x,phi[nt+1:end], label="slow neutrons")
         p2 = twinx(p1)
         plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomleft, color=:red, linestyle=:dash)
         plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomleft, color=:green, linestyle=:dash)
+        xlims!(0,140)
         savefig("docs/figs/ex4/neutrons_core_$i.png")
         println("saved docs/figs/ex4/neutrons_core_$i.png")
     end
@@ -247,6 +271,8 @@ end
 # assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
 # for the half core
 assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
-
+assemblies = [1 1 2 2 3 3 4] # fresh fuel inside
 @show reactor_with_reflector(1, assemblies, true; optimization = false)
-reactor_with_reflector(1, assemblies, true; optimization = true)
+@time reactor_with_reflector(1, assemblies, true; optimization = true)
+
+
