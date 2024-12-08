@@ -157,6 +157,9 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
     from_2 = [1.6271e-03  7.9024e-01  1.8467e-03  8.0234e-01  1.8112e-03  8.1197e-01  0.0000e+00  8.1333e-01]
     sig_12 = from_1[2:2:end]
     sig_21 = from_2[1:2:end]
+    ksig_f = [ 9.1723e-14  1.8644e-12  7.4496e-14  1.7873e-12  6.1958e-14  1.5497e-12  0.0000e+00  0.0000e+00]
+    ksig_f_1 = ksig_f[1:2:end]
+    ksig_f_2 = ksig_f[2:2:end]
 
     # numerical Parameters
     l = a + b
@@ -212,33 +215,19 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
     M = inv(A) * F
     @time eigv = eigvals(M)
     @time eigenvectors = eigvecs(M)
-    phi = eigenvectors[:,end-2]
-    k = eigv[end-2]
-    phi = real.(phi)
-    phi = phi ./ phi[nc ÷ 2]
-    p1 = plot(x,phi[1:nt], label="fast neutrons")
-    plot!(x,phi[nt+1:end], label="slow neutrons")
-    savefig("docs/figs/ex4/second_harmonic_reflected.png")
-    phi = eigenvectors[:,end-1]
-    k = eigv[end-1]
-    phi = real.(phi)
-    phi = phi ./ phi[nc ÷ 2]
-    p1 = plot(x,phi[1:nt], label="fast neutrons")
-    plot!(x,phi[nt+1:end], label="slow neutrons")
-    p2 = twinx(p1)
-    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomleft, color=:red, linestyle=:dash)
-    savefig("docs/figs/ex4/fist_harmonic_reflected.png")
-    @show k = eigv[end]
-    phi = eigenvectors[:,end]
-    phi = real.(phi)
-    phi = phi ./ phi[nc ÷ 2]
-    p1 = plot(x,phi[1:nt], label="fast neutrons")
-    plot!(x,phi[nt+1:end], label="slow neutrons")
-    p2 = twinx(p1)
-    # plot!(p2,x, D_slow,label="D slow")
-    # plot!(p2,x, Σa_f,label="Σa_f")
-    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomleft, color=:red, linestyle=:dash)
-    plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomleft, color=:green, linestyle=:dash)
+
+    for i in 0:2
+        phi = eigenvectors[:,end-i]
+        phi = real.(phi)
+        phi = phi ./ phi[nc ÷ 2]
+        p1 = plot(x,phi[1:nt], label="fast neutrons")
+        plot!(x,phi[nt+1:end], label="slow neutrons")
+        p2 = twinx(p1)
+        plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomleft, color=:red, linestyle=:dash)
+        plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomleft, color=:green, linestyle=:dash)
+        savefig("docs/figs/ex4/neutrons_core_$i.png")
+        println("saved docs/figs/ex4/neutrons_core_$i.png")
+    end
 end
 
 
@@ -251,5 +240,3 @@ end
 assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
 
 reactor_with_reflector(1, assemblies, true)
-savefig("docs/figs/ex4/neutrons_core.png")
-println("file saved to: docs/figs/ex4/neutrons_core.png")
