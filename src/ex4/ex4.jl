@@ -217,7 +217,7 @@ function reactor_with_reflector(dx, assemblies, half_core; optimization = false,
     for i in 0:2
         phi = eigenvectors[:,end-i]
         phi = real.(phi)
-        p_nom_core = 90 # MW
+        p_nom_core = 90e6 # MW
         h = 400 # cm
         P_fiss = sum(h*dx* ksig_f_1_array .* phi[1:nt] + h*dx* ksig_f_2_array .* phi[nt+1:end])
         F = p_nom_core / P_fiss
