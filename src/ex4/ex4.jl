@@ -92,7 +92,7 @@ end
 
 function left_side(D,Σa::Array,n, dx, half_core)
     println("left side with arrays")
-    open_boundary = false # TODO
+    open_boundary = true # TODO
     # maybe easiest to make a for loop to fill up the matrix, instead of thinking how to combine the vector and the matrix
     # not nessesary, because the diffision length is the same
     streaming = spzeros(n,n)
@@ -109,7 +109,7 @@ function left_side(D,Σa::Array,n, dx, half_core)
         if open_boundary
             streaming[end,end] =  -2*D[end]/dx^2 + 2*D[end]/(
                 (dx/
-                (4D[end])
+                (2D[end])
                 + 1) * dx^2
                 )
         else
