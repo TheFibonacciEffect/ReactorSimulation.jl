@@ -17,8 +17,6 @@ function get_B(x,y)
 end
 
 println("Exercise 4")
-a = 120
-b = 20
 
 round5(x) = round(x, digits=5)
 function calculate_k(a,d)
@@ -136,29 +134,25 @@ function left_side(D,Σa::Array,n, dx, half_core)
     M = streaming + collision
 end
 
-# diffusion coefficients for the different assemblies
-Ds = [1.4824e+00  3.8138e-01  1.4854e+00  3.7045e-01  1.4850e+00  3.6760e-01  1.2000e+00  4.0000e-01]
-D1 = Ds[1:2:end]
-D2 = Ds[2:2:end]
-nusig_f  = [ 7.1695e-03  1.4038e-01  6.0022e-03  1.4267e-01  5.1128e-03  1.2765e-01  0.0000e+00  0.0000e+00]
-nusig_f_1  = nusig_f[1:2:end]
-nusig_f_2  = nusig_f[2:2:end]
-sig_a = [ 9.6159e-03  8.2153e-02  1.0577e-02  9.5616e-02  1.1109e-02  9.3004e-02  1.0000e-03  2.0000e-02]
-sig_a_1  = sig_a[1:2:end]
-sig_a_2  = sig_a[2:2:end]
-from_1 =  [1.9788e-01  1.7369e-02  1.9748e-01  1.6350e-02  1.9754e-01  1.5815e-02  2.5178e-01  2.5000e-02]
-from_2 = [1.6271e-03  7.9024e-01  1.8467e-03  8.0234e-01  1.8112e-03  8.1197e-01  0.0000e+00  8.1333e-01]
-sig_12 = from_1[2:2:end]
-sig_21 = from_2[1:2:end]
-function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
+function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
-    # assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
-    # assemblies = fill(1,14)
-    assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
-    # assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
-    # assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
-    # for the half core
-    # assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
+    # physical Parameters
+    a = 120
+    b = 20
+    Ds = [1.4824e+00  3.8138e-01  1.4854e+00  3.7045e-01  1.4850e+00  3.6760e-01  1.2000e+00  4.0000e-01]
+    D1 = Ds[1:2:end]
+    D2 = Ds[2:2:end]
+    nusig_f  = [ 7.1695e-03  1.4038e-01  6.0022e-03  1.4267e-01  5.1128e-03  1.2765e-01  0.0000e+00  0.0000e+00]
+    nusig_f_1  = nusig_f[1:2:end]
+    nusig_f_2  = nusig_f[2:2:end]
+    sig_a = [ 9.6159e-03  8.2153e-02  1.0577e-02  9.5616e-02  1.1109e-02  9.3004e-02  1.0000e-03  2.0000e-02]
+    sig_a_1  = sig_a[1:2:end]
+    sig_a_2  = sig_a[2:2:end]
+    from_1 =  [1.9788e-01  1.7369e-02  1.9748e-01  1.6350e-02  1.9754e-01  1.5815e-02  2.5178e-01  2.5000e-02]
+    from_2 = [1.6271e-03  7.9024e-01  1.8467e-03  8.0234e-01  1.8112e-03  8.1197e-01  0.0000e+00  8.1333e-01]
+    sig_12 = from_1[2:2:end]
+    sig_21 = from_2[1:2:end]
+
     # numerical Parameters
     l = 2a + 2b
     nc = 2a ÷ dx |> Int
@@ -189,7 +183,6 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
             Σ21[j] = sig_21[ia]
         end
     end
-    half_core = false
     # slow neutrons right hand side
     diffusion_slow = left_side(D_slow, Σa_s, nt, dx, half_core)
     # fast neutrons right hand side
@@ -228,6 +221,8 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     phi = phi ./ phi[nc ÷ 2]
     p1 = plot(x,phi[1:nt], label="fast neutrons")
     plot!(x,phi[nt+1:end], label="slow neutrons")
+    p2 = twinx(p1)
+    plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomleft, color=:red, linestyle=:dash)
     savefig("docs/figs/ex4/fist_harmonic_reflected.png")
     @show k = eigv[end]
     phi = eigenvectors[:,end]
@@ -242,6 +237,15 @@ function reactor_with_reflector(dx; save = false, do_plot=false, verbose=false, 
     plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomleft, color=:green, linestyle=:dash)
 end
 
-reactor_with_reflector(1)
+
+# assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
+# assemblies = fill(1,14)
+# assemblies = [4 1 1 2 2 3 3 3 3 2 2 1 1 4] # fresh fuel outside
+# assemblies = [4 3 3 2 2 1 1 1 1 2 2 3 3 4] # fresh fuel inside
+# assemblies = [4 1 2 3 1 2 3 1 2 3 1 2 3 4] # checkerbord
+# for the half core
+assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
+
+reactor_with_reflector(1, assemblies, true)
 savefig("docs/figs/ex4/neutrons_core.png")
 println("file saved to: docs/figs/ex4/neutrons_core.png")
