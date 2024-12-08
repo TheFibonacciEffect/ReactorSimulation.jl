@@ -139,7 +139,7 @@ function left_side(D,Σa::Array,n, dx, half_core)
     M = streaming + collision
 end
 
-function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot=false, verbose=false, max=false)
+function reactor_with_reflector(dx, assemblies, half_core; optimization = false, save = false, do_plot=false, verbose=false, max=false)
     println("------- start run for reactor with reflector ------")
     # physical Parameters
     a = 120
@@ -173,6 +173,8 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
     D_fast = fill(NaN,nt)
     νΣf_f_array = fill(NaN,nt)
     νΣf_s_array = fill(NaN,nt)
+    ksig_f_1_array = fill(NaN,nt)
+    ksig_f_2_array = fill(NaN,nt)
     Σ12 = fill(NaN,nt)
     Σ21 = fill(NaN,nt)
     @show assemblies
@@ -186,6 +188,8 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
             Σa_s[j]    = sig_a_2[ia]
             Σ12[j] = sig_12[ia]
             Σ21[j] = sig_21[ia]
+            ksig_f_1_array[j] = ksig_f_1[ia]
+            ksig_f_2_array[j] = ksig_f_2[ia]
         end
     end
     # slow neutrons right hand side
@@ -213,7 +217,15 @@ function reactor_with_reflector(dx, assemblies, half_core; save = false, do_plot
     for i in 0:2
         phi = eigenvectors[:,end-i]
         phi = real.(phi)
-        phi = phi ./ phi[nc ÷ 2]
+        p_nom_core = 90 # MW
+        h = 400 # cm
+        @show P_fiss = sum(h*dx* ksig_f_1_array .* phi[1:nt] + h*dx* ksig_f_2_array .* phi[nt+1:end])
+        @show F = p_nom_core / P_fiss
+        phi = F * phi
+        if optimization
+            boundary_index = nt - ass_length
+            return phi[nt - boundary_index], phi[end - boundary_index]
+        end
         p1 = plot(x,phi[1:nt], label="fast neutrons")
         plot!(x,phi[nt+1:end], label="slow neutrons")
         p2 = twinx(p1)
@@ -233,7 +245,5 @@ end
 # for the half core
 assemblies = [3 3 2 2 1 1 4] # fresh fuel outside
 
-@time reactor_with_reflector(1, assemblies, true)
-@time reactor_with_reflector(1, assemblies, true)
-@time reactor_with_reflector(1, assemblies, true)
-@time reactor_with_reflector(1, assemblies, true)
+@show reactor_with_reflector(1, assemblies, true; optimization = false)
+@show reactor_with_reflector(1, assemblies, true; optimization = true)
