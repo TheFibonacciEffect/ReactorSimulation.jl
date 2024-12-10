@@ -4,6 +4,7 @@ using Unitful
 using Plots
 using LinearAlgebra
 using Statistics
+using Test
 # Phyical Parameters
 # x0 = 10u"cm"
 # S = 1000u"cm^-2*s^-1"
@@ -120,7 +121,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     p_boundary_conditions = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show round5.([P[1], P[end]])
-    @show round5(P[Int((1.05 + l/2) ÷ ustrip(dx))] - 9.9723e-1)
+    @test round5(P[Int((1.05 + l/2) ÷ ustrip(dx))])  - 9.9723e-1 ≈ 0 atol=1e-4
     @show round5(analytical_reactor_without_reflector(1.05) - 9.9723e-1)
     println("current at the boundary")
     @show JL = (P[2] - P[1])/dx |> round5
@@ -136,11 +137,21 @@ end
 function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=false)
     println("-------------- reflected reactor ------------")
     # numerical Parameters
-    l = 2a+2b+2extr_l
+    l = 2a+2b
     n = l ÷ dx |> Int
     x =  range(-l/2, l/2,n)
     # you can include eg. zero boundary conditions by starting and ending the diagonal with zeros
     laplace = spdiagm(-1 => 1* ones(n-1), 0 => -2 * ones(n), 1 => 1* ones(n-1))/dx^2
+    laplace[1,1] -= 2*D[1]/(
+        (dx/
+        (2D[1])
+        + 1) * dx^2
+        )
+    laplace[end,end] += 2*D[end]/(
+        (dx/
+        (2D[end])
+        + 1) * dx^2
+        )
     display(laplace[1:3,1:3])
     @show D/dx^2
     streaming = D* laplace
@@ -168,7 +179,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     p2 = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
-    @show round5(P[Int((1.05 + l/2) ÷ ustrip(dx))])
+    @test round5(P[Int((1.05 + l/2) ÷ ustrip(dx))]) - 9.9827e-1 ≈ 0 atol=1e-4
     @show JL = round((P[2] - P[1])/dx, digits=5)
     @show JR = round((P[end-1] - P[end])/dx, digits=5)
     plot(p1)
