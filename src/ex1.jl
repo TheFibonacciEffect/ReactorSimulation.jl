@@ -14,6 +14,10 @@ function beta(i,j)
     return D
 end
 
+function round5(x)
+    return round(x, sigdigits=5)
+end
+
 # analytical solution
 function slab_analytical(x0,S)
     extrapolated_length = 2/3(Σs + Σa)
@@ -82,9 +86,9 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
-        @show Φ(1.05)
-        @show Φ(0)
-        @show Φ(x0)
+        @show round5(Φ(1.05))
+        @show round5(Φ(0))
+        @show round5(Φ(x0))
         print("A: ")
         display(A[10:11,10:11])
         println("boundary conditions")
@@ -94,10 +98,17 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
         display(A[end-1:end,end-1:end])
         @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
         println("Question 3")
-        @show phi[1]
-        @show phi[end]
-        @show phi[Int(1.05 ÷ ustrip(dx))]
-        @show phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05)
+        @show round5(phi[1])
+        @show round5(phi[end])
+        @show round5(phi[Int(1.05 ÷ ustrip(dx))])
+        @show round5(phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05))
+        @show round5(phi[1] - Φ(0))
+        @show round5(A[1,1])
+        @show round5(A[1,2])
+        @show round5(A[2,1])
+        @show round5(A[end,end])
+        @show round5(A[end,end-1])
+        @show round5(A[end-1,end])
     end
     if do_plot
         p_ana =  plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
