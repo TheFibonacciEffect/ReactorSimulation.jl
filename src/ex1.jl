@@ -87,7 +87,8 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
     Q = apply_boundary_conditions!(A,S,dx,n)
     # phi = cg(ustrip(A), ustrip(Q))
     # phi = bicgstabl(ustrip(A), ustrip(Q))
-    phi =  ustrip(A) \ ustrip(Q)
+    # phi =  ustrip(A) \ ustrip(Q)
+    phi =  A \ ustrip(Q)
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
@@ -98,6 +99,8 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
         # print("A: ")
         # display(A)
         # writedlm("A.txt", A, " ")
+        A_noah = readdlm("src/A.csv", ';', Float64, '\n')
+        @test maximum(abs.(-A_noah .- A)) ≈ 0 atol = 1e-3
         display(A[10:11,10:11])
         println("boundary conditions")
         print("left A: ")
