@@ -1,6 +1,6 @@
 using Unitful
 using Plots
-
+using Test
 # Phyical Parameters
 x0 = 10
 S = 1000
@@ -15,7 +15,7 @@ function beta(i,j)
 end
 
 function round5(x)
-    return round(x, sigdigits=5)
+    return round(x, digits=5)
 end
 
 # analytical solution
@@ -41,18 +41,23 @@ function apply_boundary_conditions!(A, S, dx, n)
     # Modify the first row of A to reflect this boundary condition
     # A[1, 1] = -2 * D / dx^2 - Σa
     # A[1, 2] = D / dx^2
-    A[1,1] = - (1/dx^2)*beta(2,1) - Σa
-    A[1,2] = 1/dx^2 * beta(2,1)
+    A[1,1] = - (- (1/dx^2)*beta(2,1) - Σa)
+    A[1,2] = -  1/dx^2 * beta(2,1)
     # Right boundary condition at x = n (Last node)
     # J⁺(0) = ϕ(0)/4 - D * dϕ/dx |_{x=0} = 0
     # Set up the right flux condition at the last row in A
     # A[n, n-1] = -D / dx
     # A[n, n] = 1 / 4 + D / dx
     A[n,n] = 1/(2*(dx/(4D) + 1)) * 1/dx + Σa +  beta(n-1,1)/dx^2
+    # streaming[end,end] =  -2*D[end]/dx^2 + 2*D[end]/(
+    #     (dx/
+    #     (2D[end])
+    #     + 1) * dx^2
+    #     )
     A[n,n-1] = - beta(n-1,1)/dx^2
     # Adjust Q vector to include the source term
     Q = zeros(n)
-    Q[1] =  - S / 2/dx
+    Q[1] =  S / 2/dx
 
     return Q
 end
@@ -86,7 +91,7 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
-        @show round5(Φ(1.05))
+        @test round5(Φ(1.05))  ≈ 7.3299e3 atol=1e-1
         @show round5(Φ(0))
         @show round5(Φ(x0))
         print("A: ")
@@ -97,18 +102,27 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
         print("right: ")
         display(A[end-1:end,end-1:end])
         @show unit(eltype(Q))/unit(eltype(A)) # the units seem to be correct
-        println("Question 3")
+        println("Exercise 1 Question 3")
+        @testset "Exercise 1 Question 3" begin
         @show round5(phi[1])
         @show round5(phi[end])
-        @show round5(phi[Int(1.05 ÷ ustrip(dx))])
-        @show round5(phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05))
+        # test middle
+        @test round5(A[4,4])  ≈ 16.604 atol = 1e-3
+        @test round5(A[4,3]) ≈ -8.2919e0 atol = 1e-3
+        @test round5(A[3,4]) ≈ -8.2919e0 atol = 1e-3
+        # test left
+        @test round5(A[1,1])  ≈ 8.3119 atol = 1e-3
+        @test round5(A[1,2]) ≈  -8.2919e0 atol = 1e-3
+        @test round5(A[2,1]) ≈  -8.2919e0 atol = 1e-3
+        # test right
+        @test round5(A[end,end])   ≈ 12.1536 atol = 1e-3
+        @test round5(A[end,end-1]) ≈ - 8.2919e0 atol = 1e-3
+        @test round5(A[end-1,end]) ≈ - 8.2919e0 atol = 1e-3
+        @test Q[1] ≈ 5000 atol=1e-3
+        @test_broken round5(phi[Int(1.05 ÷ ustrip(dx))]) ≈ 7.3299e3 atol=1e-3
+        @test_broken round5(phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05)) ≈ 3.7901e-1 atol=1e-3
         @show round5(phi[1] - Φ(0))
-        @show round5(A[1,1])
-        @show round5(A[1,2])
-        @show round5(A[2,1])
-        @show round5(A[end,end])
-        @show round5(A[end,end-1])
-        @show round5(A[end-1,end])
+        end #testset
     end
     if do_plot
         p_ana =  plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
@@ -141,7 +155,7 @@ function plot_error(n)
 end
 
 @time slab_reactor(100; verbose=true, do_plot=true, save=true)
-@time slab_reactor(100000; verbose=true, do_plot=true)
+@time slab_reactor(100000; verbose=false, do_plot=false)
 plot_error(Int.(round.(10 .^ (1:1:5))))
 
 # @show Q
