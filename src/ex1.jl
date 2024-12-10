@@ -32,7 +32,7 @@ end
 
 using SparseArrays
 using IterativeSolvers
-
+using DelimitedFiles
 using SparseArrays
 
 function apply_boundary_conditions!(A, S, dx, n)
@@ -91,10 +91,13 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
     # TODO the error is much better when using cg, but this shouldnt work, because the matrix is not symmetric
     phi = phi*unit(eltype(Q))/unit(eltype(A))
     if verbose
+        @test A*phi ≈ Q atol=1e-6
         @test round5(Φ(1.05))  ≈ 7.3299e3 atol=1e-1
         @show round5(Φ(0))
         @show round5(Φ(x0))
-        print("A: ")
+        # print("A: ")
+        # display(A)
+        # writedlm("A.txt", A, " ")
         display(A[10:11,10:11])
         println("boundary conditions")
         print("left A: ")
