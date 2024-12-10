@@ -106,19 +106,22 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
         @testset "Exercise 1 Question 3" begin
         @show round5(phi[1])
         @show round5(phi[end])
+        include("matA.jl")
+        println("Testing if the Matrix that Matieu gave me is the same as the one I calculated")
+        @test maximum(abs.(A_matieu .- A)) ≈ 0 atol = 1e-3
         # test middle
         @test round5(A[4,4])  ≈ 16.604 atol = 1e-3
         @test round5(A[4,3]) ≈ -8.2919e0 atol = 1e-3
         @test round5(A[3,4]) ≈ -8.2919e0 atol = 1e-3
         # test left
-        @test round5(A[1,1])  ≈ 8.3119 atol = 1e-3
-        @test round5(A[1,2]) ≈  -8.2919e0 atol = 1e-3
-        @test round5(A[2,1]) ≈  -8.2919e0 atol = 1e-3
+        @test round5(A[1,1])  ≈ 8.3118740e+00 atol = 1e-3
+        @test round5(A[1,2]) ≈  -8.2918740e+00 atol = 1e-3
+        @test round5(A[2,1]) ≈  -8.2918740e+00 atol = 1e-3
         # test right
-        @test round5(A[end,end])   ≈ 12.1536 atol = 1e-3
+        @test round5(A[end,end])   ≈ 1.2153595e+01 atol = 1e-3
         @test round5(A[end,end-1]) ≈ - 8.2919e0 atol = 1e-3
         @test round5(A[end-1,end]) ≈ - 8.2919e0 atol = 1e-3
-        @test Q[1] ≈ 5000 atol=1e-3
+        @test Q[1] ≈ 5.0000000e+03 atol=1e-3
         @test_broken round5(phi[Int(1.05 ÷ ustrip(dx))]) ≈ 7.3299e3 atol=1e-3
         @test_broken round5(phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05)) ≈ 3.7901e-1 atol=1e-3
         @show round5(phi[1] - Φ(0))
