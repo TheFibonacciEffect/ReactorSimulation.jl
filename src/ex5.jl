@@ -2,6 +2,7 @@ using DifferentialEquations
 using Plots
 # all calculations are done in days and barns!
 using Plots.Measures
+using Test
 default(left_margin=10mm)
 # Cross sections in barns
 sig_c = Dict("U-235" => 12, "U-238" => 4, "Pu-239" => 81, "X" => 5e6, "Y" => 50)
@@ -67,17 +68,22 @@ function analytical_solution(t, u, Φ,  fy, λ, b)
 end
 
 
+# V = pi * (0.4cm)^2 * 400cm = 2.010619298E5 mm³
+# rho = 10.4g/(cm^3)
+# rho × V ≈ 2.091044070 kg
 M = 264*2.091044070 #kg
 kg_u = 6.0221408E26
-N = M * kg_u / ((238*0.97 + 235 * 0.03) + 2*12)
+N = M * kg_u / ((238*0.97 + 235 * 0.03) + 2*16)
 
 # N = 2.431E24
 # TODO
-# 20cm x 20cm x 200cm
+# 20cm x 20cm x 400cm
 V = 20^2*400
 ρ = N/V
 N5 = ρ*0.03
 N8 = ρ*0.97
+# The initial concentration of U-235 is 2.31 1020𝑐𝑚−3 .T
+@test N5 ≈ 2.31E20 atol=1E18
 function to_matrix(f,n)
     A = zeros(n,n)
     for i in 1:n
