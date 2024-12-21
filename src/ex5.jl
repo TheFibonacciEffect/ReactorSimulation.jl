@@ -1,9 +1,11 @@
+println("Importing Libraries")
 using DifferentialEquations
 using Plots
-# all calculations are done in days and barns!
 using Plots.Measures
 using Test
-default(left_margin=10mm)
+println("Libraries Imported, starting exercise 5")
+println("Setting Decault Plotting")
+default(left_margin=10mm, yscale=:log10)
 # Cross sections in barns
 sig_c = Dict("U-235" => 12, "U-238" => 4, "Pu-239" => 81, "X" => 5e6, "Y" => 50)
 sig_s = Dict("U-235" => 10, "U-238" => 10, "Pu-239" => 10, "X" => 10, "Y" => 10)
@@ -24,7 +26,6 @@ fy = Dict("U-235" => 0. , "U-238" => 0. , "Pu-239" => 0. , "X" => 0.06, "Y" => 1
 Φ = 1e13 # * (60^2*24) # to neutrons per barn per day
 b = 1e-24 #barns in cm^2 
 κ = 3.2e-11
-println("Cross-section (capture) for Pu-239: ", sig_c["Pu-239"])
 function betman_eq!(du,u,p,t)
     #= 5 =# du[1] = Φ*((- sig_c["U-235"]*b -  sig_f["U-235"]*b)*u[1] )
     #= 8 =# du[2] = Φ*((- sig_c["U-238"]*b -  sig_f["U-238"]*b)*u[2] )
@@ -96,9 +97,12 @@ function to_matrix(f,n)
     return A
 end
 
+seconds_per_day  = 24* 60^2
+
 u0 = [N5,N8,0,0,0]
-prob = ODEProblem(betman_eq!, u0,(0,365.),dtmax=0.1)
+prob = ODEProblem(betman_eq!, u0,(0,365 * seconds_per_day),dtmax=60)
 # prob = ODEProblem(betman_eq!, [1,0,0,0,0],(0,1.), dtmax=0.01)
+println("Solving ODE")
 sol = solve(prob)
 # plot(sol.t,sol.u', label=["U5" "U8" "P9" "X" "Y"])
 plot(sol)
@@ -106,7 +110,7 @@ function plotsol(sol)
     plot()
     for (i, label) in enumerate(["U5" "U8" "P9" "X" "Y"])
         # plot!(sol.t, getindex.(sol.u,i), label=label, yscale=:log)
-        plot!(sol.t[2:end], getindex.(sol.u,i)[2:end], label=label, yscale=:log10)
+        plot!(sol.t[2:end] ./ seconds_per_day, getindex.(sol.u,i)[2:end], label=label, yscale=:log10)
     end
     plot!()
 end
@@ -132,8 +136,8 @@ function plot_err(sol)
     end
     sola = hcat(sola[2:end]...)
     for (i, label) in enumerate(["U5" "U8" "P9" "X" "Y"])
-        err = getindex.(sol.u,i)[2:end] - sola[i,:]
-        @show err
+        # err = getindex.(sol.u,i)[2:end] - sola[i,:]
+        err =  sola[i,:]
         # plot!(sol.t, getindex.(sol.u,i), label=label, yscale=:log)
         # plot!(sol.t[2:end], err , label=label, yscale=:log10)
         plot!(sol.t[2:end], err , label=label)
@@ -141,6 +145,41 @@ function plot_err(sol)
     plot!()
 end
 
+function euler(u0,A,t_end, dt)
+    t = 0:dt:t_end
+    u = copy(u0)
+    us = zeros(length(t),length(u0))
+    for i in 1:length(t)
+        u += A*u*dt
+        us[i,:] .= u
+    end
+    return t,us
+end
+
+
+function error_euler()
+    dt = 60
+    t_end = 365*seconds_per_day
+    t, u = euler(u0,to_matrix(betman_eq!,5),t_end,dt)
+    sola = zeros(length(t),length(u0))
+    for i in 1:length(t)
+        sola[i,:] = analytical_solution(t[i],u0, Φ,  fy, λ, b )
+    end
+    err = abs.(u .- sola)
+    rel_err = err ./ sola
+    return err, rel_err,  0:dt:t_end
+end
+println("Solving ODE using Euler")
+err, rel_err , t = error_euler()
+plot(t/seconds_per_day ,err, yscale=:log10)
+println(savefig("docs/figs/ex5/err_euler.png"))
+plot(t/seconds_per_day ,rel_err, yscale=:log10)
+println(savefig("docs/figs/ex5/err_euler_relative.png"))
 
 
 plot_err(sol)
+println(savefig("docs/figs/ex5/ode_solution.png"))
+t, u = euler(u0,to_matrix(betman_eq!,5),365*seconds_per_day,60)
+plot(t/seconds_per_day,u[:,1])
+plot(t/seconds_per_day, u, yscale=:log10)
+println(savefig("docs/figs/ex5/euler.png"))
