@@ -156,10 +156,10 @@ end
 function plot_error(n)
     err = slab_reactor.(n; save = false)./n
     ps = plot(n,err, ylabel="error at x0", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
-    savefig("./docs/figs/ex1/err_x0.png")
+    println(savefig("./docs/figs/ex1/err_x0.png"))
     err = slab_reactor.(n; save = false, max=true)
     pm = plot(n,err, ylabel="max err", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
-    savefig("./docs/figs/ex1/max_errors.png")
+    println(savefig("./docs/figs/ex1/max_errors.png"))
     plot(pm,ps)
 end
 

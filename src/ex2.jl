@@ -228,6 +228,6 @@ function jacobi_iteration_lecture!(M,F,P,k)
 end
 
 reactor_without_reflector(0.1)
-savefig("docs/figs/ex2/bare.png")
+println(savefig("docs/figs/ex2/bare.png"))
 reactor_reflector(0.1)
-savefig("docs/figs/reflector.png")
+println(savefig("docs/figs/reflector.png"))

@@ -231,11 +231,11 @@ end
 
 # run the code
 reactor_without_reflector(0.1)
-savefig("docs/figs/ex3/bare.png")
+println(savefig("docs/figs/ex3/bare.png"))
 println("file saved to: docs/figs/ex3/bare.png")
 reactor_with_reflector(0.1)
-savefig("docs/figs/ex3/reflected.png")
+println(savefig("docs/figs/ex3/reflected.png"))
 println("file saved to: docs/figs/ex3/reflected.png")
 reactor_without_reflector(0.1,error=true)
-savefig("docs/figs/ex3/error.png")
+println(savefig("docs/figs/ex3/error.png"))
 println("file saved to: docs/figs/ex3/error.png")
