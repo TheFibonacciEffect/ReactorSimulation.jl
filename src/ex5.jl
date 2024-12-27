@@ -30,8 +30,8 @@ function betman_eq!(du,u,p,t)
     #= 5 =# du[1] = Φ*((- sig_c["U-235"]*b -  sig_f["U-235"]*b)*u[1] )
     #= 8 =# du[2] = Φ*((- sig_c["U-238"]*b -  sig_f["U-238"]*b)*u[2] )
     #= 9 =# du[3] = Φ*((- sig_c["Pu-239"]*b - sig_f["Pu-239"]*b)*u[3] + sig_c["U-238"]*b*u[2] )
-    #= X =# du[4] = -Φ*sig_c["X"]*b*u[4] + Φ* sig_f["U-235"]*b * u[1] *fy["X"]*b - λ["X"]*b*u[4]
-    #= Y =# du[5] = -Φ*sig_c["Y"]*b*u[5] + Φ* sig_f["U-235"]*b * u[1] *fy["Y"]*b - λ["Y"]*b*u[5]
+    #= X =# du[4] = -Φ*sig_c["X"]*b*u[4] + Φ* sig_f["U-235"]*b * u[1] *fy["X"] - λ["X"]*u[4]
+    #= Y =# du[5] = -Φ*sig_c["Y"]*b*u[5] + Φ* sig_f["U-235"]*b * u[1] *fy["Y"] - λ["Y"]*u[5]
 end
 
 function analytical_solution(t, u, Φ,  fy, λ, b)
@@ -83,7 +83,7 @@ V = 20^2*400
 ρ = N/V
 N5 = ρ*0.03
 N8 = ρ*0.97
-# The initial concentration of U-235 is 2.31 1020𝑐𝑚−3 .T
+# The initial concentration of U-235 is 2.31 10^20𝑐𝑚−3 .T
 @test N5 ≈ 2.31E20 atol=1E18
 function to_matrix(f,n)
     A = zeros(n,n)
@@ -96,6 +96,17 @@ function to_matrix(f,n)
     end
     return A
 end
+
+# testset
+@testset "Check Matrix" begin
+    A = to_matrix(betman_eq!,5)
+    @test  A[1,1] ≈ -6.8e-10 atol=1e-12
+    # -7.13930E-05
+    @test A[4,1] ≈ 3.36000E-11  atol=1e-12
+    @test -7.13930E-05 ≈ A[4,4] atol=1e-7
+    @test A[5,5] ≈ 5e-10 atol=1e-7
+end
+
 
 seconds_per_day  = 24* 60^2
 
@@ -123,9 +134,6 @@ function error(dt)
     return sol.u[end]
 end
 plotsol(sol)
-# I get -6.8e-8 and matieu gets -6.8e-10
-# I have no idea where this factor of 100 comes from, but its exactly a factor of 100 between matieu and my solution
-to_matrix(betman_eq!,5)/100
 
 
 function plot_err(sol)
