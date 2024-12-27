@@ -26,6 +26,23 @@ fy = Dict("U-235" => 0. , "U-238" => 0. , "Pu-239" => 0. , "X" => 0.06, "Y" => 1
 Φ = 1e13 # * (60^2*24) # to neutrons per barn per day
 b = 1e-24 #barns in cm^2 
 κ = 3.2e-11
+
+# V = pi * (0.4cm)^2 * 400cm = 2.010619298E5 mm³
+# rho = 10.4g/(cm^3)
+# rho × V ≈ 2.091044070 kg
+M = 264*2.091044070 #kg
+kg_u = 6.0221408E26
+N = M * kg_u / ((238*0.97 + 235 * 0.03) + 2*16)
+
+# N = 2.431E24
+# 20cm x 20cm x 400cm
+V = 20^2*400
+ρ = N/V
+N5 = ρ*0.03
+N8 = ρ*0.97
+# The initial concentration of U-235 is 2.31 10^20𝑐𝑚−3 .T
+@test N5 ≈ 2.31E20 atol=1E18
+
 function betman_eq!(du,u,p,t)
     #= 5 =# du[1] = Φ*((- sig_c["U-235"]*b -  sig_f["U-235"]*b)*u[1] )
     #= 8 =# du[2] = Φ*((- sig_c["U-238"]*b -  sig_f["U-238"]*b)*u[2] )
@@ -42,8 +59,8 @@ function analytical_solution(t, u, Φ,  fy, λ, b)
     κ_U235 = Φ * (sig_c["U-235"] + sig_f["U-235"]) * b
     κ_U238 = Φ * (sig_c["U-238"] + sig_f["U-238"]) * b
     κ_Pu239 = Φ * (sig_c["Pu-239"] + sig_f["Pu-239"]) * b
-    κ_X = Φ * sig_c["X"] * b + λ["X"] * b
-    κ_Y = Φ * sig_c["Y"] * b + λ["Y"] * b
+    κ_X = Φ * sig_c["X"] * b + λ["X"]
+    κ_Y = Φ * sig_c["Y"] * b + λ["Y"]
 
     # Solve for each concentration at time t
     
@@ -68,23 +85,6 @@ function analytical_solution(t, u, Φ,  fy, λ, b)
     return [u1_t, u2_t, u3_t, u4_t, u5_t]
 end
 
-
-# V = pi * (0.4cm)^2 * 400cm = 2.010619298E5 mm³
-# rho = 10.4g/(cm^3)
-# rho × V ≈ 2.091044070 kg
-M = 264*2.091044070 #kg
-kg_u = 6.0221408E26
-N = M * kg_u / ((238*0.97 + 235 * 0.03) + 2*16)
-
-# N = 2.431E24
-# TODO
-# 20cm x 20cm x 400cm
-V = 20^2*400
-ρ = N/V
-N5 = ρ*0.03
-N8 = ρ*0.97
-# The initial concentration of U-235 is 2.31 10^20𝑐𝑚−3 .T
-@test N5 ≈ 2.31E20 atol=1E18
 function to_matrix(f,n)
     A = zeros(n,n)
     for i in 1:n
@@ -107,16 +107,6 @@ end
     @test A[5,5] ≈ 5e-10 atol=1e-7
 end
 
-
-seconds_per_day  = 24* 60^2
-
-u0 = [N5,N8,0,0,0]
-prob = ODEProblem(betman_eq!, u0,(0,365 * seconds_per_day),dtmax=60)
-# prob = ODEProblem(betman_eq!, [1,0,0,0,0],(0,1.), dtmax=0.01)
-println("Solving ODE")
-sol = solve(prob)
-# plot(sol.t,sol.u', label=["U5" "U8" "P9" "X" "Y"])
-plot(sol)
 function plotsol(sol)
     plot()
     for (i, label) in enumerate(["U5" "U8" "P9" "X" "Y"])
@@ -133,10 +123,8 @@ function error(dt)
     sol = solve(prob, Euler)
     return sol.u[end]
 end
-plotsol(sol)
 
-
-function plot_err(sol)
+function plot_analytical(sol)
     plot()
     sola = zero(sol.u)
     for i in eachindex(sol.t)
@@ -150,6 +138,7 @@ function plot_err(sol)
         # plot!(sol.t[2:end], err , label=label, yscale=:log10)
         plot!(sol.t[2:end], err , label=label)
     end
+    title!("Analytical Solution")
     plot!()
 end
 
@@ -177,6 +166,19 @@ function error_euler()
     rel_err = err ./ sola
     return err, rel_err,  0:dt:t_end
 end
+
+seconds_per_day  = 24* 60^2
+
+u0 = [N5,N8,0,0,0]
+prob = ODEProblem(betman_eq!, u0,(0,365 * seconds_per_day),dtmax=60)
+# prob = ODEProblem(betman_eq!, [1,0,0,0,0],(0,1.), dtmax=0.01)
+println("Solving ODE")
+sol = solve(prob)
+# plot(sol.t,sol.u', label=["U5" "U8" "P9" "X" "Y"])
+plot(sol)
+plotsol(sol)
+
+
 println("Solving ODE using Euler")
 err, rel_err , t = error_euler()
 plot(t/seconds_per_day ,err, yscale=:log10)
@@ -185,9 +187,14 @@ plot(t/seconds_per_day ,rel_err, yscale=:log10)
 println(savefig("docs/figs/ex5/err_euler_relative.png"))
 
 
-plot_err(sol)
+plot_analytical(sol)
 println(savefig("docs/figs/ex5/ode_solution.png"))
 t, u = euler(u0,to_matrix(betman_eq!,5),365*seconds_per_day,60)
-plot(t/seconds_per_day,u[:,1])
-plot(t/seconds_per_day, u, yscale=:log10)
+# getindex.(sol.u,i)[2:end]
+plot()
+for (i, label) in enumerate(["U5" "U8" "P9" "X" "Y"])
+    plot!(t/seconds_per_day, u[:,i], label=label, yscale=:log10)
+end
+plot!()
+# plot(t/seconds_per_day, u, yscale=:log10)
 println(savefig("docs/figs/ex5/euler.png"))
