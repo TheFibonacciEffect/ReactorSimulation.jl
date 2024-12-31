@@ -150,6 +150,18 @@ function euler(u0,A,t_end, dt)
         u += A*u*dt
         us[i,:] .= u
     end
+    println("After 1 day")
+    concentrations = Dict(
+    "U-235" => 2.31e20,
+    "Pu-239" => 2.58e16,
+    "X" => 1.08e14,
+    "Y" => 2.17e16
+    )
+    keymap = Dict("U-235" => 1, "U-238" => 2, "Pu-239" => 3, "X" => 4, "Y" => 5)
+    @testset "Check Concentrations" for (i,label) in enumerate(keys(concentrations))
+        @test us[Int(seconds_per_day/dt),keymap[label]] ≈ concentrations[label] rtol=1e-2
+    end
+    # println(us[Int(seconds_per_day/dt),:])
     return t,us
 end
 
@@ -188,12 +200,18 @@ println(savefig("docs/figs/ex5/err_euler_relative.png"))
 
 
 plot_analytical(sol)
+
+# The concentrations of U-
+# 235, Pu-239, X and Y after 1 day of irradiation are respectively: 𝑈 − 235 =
+# 2.31 1020𝑐𝑚−3; 𝑃𝑢 − 239 = 2.58 1016𝑐𝑚−3; 𝑋 = 1.08 1014𝑐𝑚−3; 𝑌 = 2.17 1016𝑐𝑚−3
+
 println(savefig("docs/figs/ex5/ode_solution.png"))
 t, u = euler(u0,to_matrix(betman_eq!,5),365*seconds_per_day,60)
 # getindex.(sol.u,i)[2:end]
 plot()
 for (i, label) in enumerate(["U5" "U8" "P9" "X" "Y"])
     plot!(t/seconds_per_day, u[:,i], label=label, yscale=:log10)
+    title!("Solution using Euler")
 end
 plot!()
 # plot(t/seconds_per_day, u, yscale=:log10)
