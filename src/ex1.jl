@@ -114,7 +114,7 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
         @show round5(phi[end])
         include("matA.jl")
         println("Testing if the Matrix that Matieu gave me is the same as the one I calculated")
-        @test maximum(abs.(A_matieu .- A)) ≈ 0 atol = 1e-3
+        @test maximum(abs.(A_matieu .- A)) ≈ 0 atol = 1e-7
         # test middle
         @test round5(A[4,4])  ≈ 16.604 atol = 1e-3
         @test round5(A[4,3]) ≈ -8.2919e0 atol = 1e-3
