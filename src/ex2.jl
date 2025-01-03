@@ -121,7 +121,7 @@ function reactor_without_reflector(dx; save = false, do_plot=false, verbose=fals
     p_boundary_conditions = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show round5.([P[1], P[end]])
-    @test round5(P[Int((1.05 + l/2) ÷ ustrip(dx))])  - 9.9723e-1 ≈ 0 atol=1e-4
+    @testset "Test reference value" begin @test round5(P[Int((1.05 + l/2) ÷ ustrip(dx))])  - 9.9723e-1 ≈ 0 atol=1e-4 end
     @show round5(analytical_reactor_without_reflector(1.05) - 9.9723e-1)
     println("current at the boundary")
     @show JL = (P[2] - P[1])/dx |> round5
@@ -179,7 +179,7 @@ function reactor_reflector(dx; save = false, do_plot=false, verbose=false, max=f
     p2 = plot(x[2:end],Pl,title="Boundary Conditions")
     plot!(x[2:end],Pr)
     @show P[1], P[end]
-    @test round5(P[Int((1.05 + l/2) ÷ ustrip(dx))]) - 9.9827e-1 ≈ 0 atol=1e-4
+    @testset "Test Reference Value reflected reactor" begin @test round5(P[Int((1.05 + l/2) ÷ ustrip(dx))]) - 9.9827e-1 ≈ 0 atol=1e-4 end
     @show JL = round((P[2] - P[1])/dx, digits=5)
     @show JR = round((P[end-1] - P[end])/dx, digits=5)
     plot(p1)
