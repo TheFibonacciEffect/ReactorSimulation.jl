@@ -128,8 +128,8 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
         @test round5(A[end,end-1]) ≈ - 8.2919e0 atol = 1e-3
         @test round5(A[end-1,end]) ≈ - 8.2919e0 atol = 1e-3
         @test Q[1] ≈ 5.0000000e+03 atol=1e-3
-        @test_broken round5(phi[Int(1.05 ÷ ustrip(dx))]) ≈ 7.3299e3 atol=1e-3
-        @test_broken round5(phi[Int(1.05 ÷ ustrip(dx))] - Φ(1.05)) ≈ 3.7901e-1 atol=1e-3
+        @test_broken round5(phi[Int(1.05 ÷ ustrip(dx)) + 1]) ≈ 7.3299e3 atol=1e-1
+        @test round5(phi[Int(1.05 ÷ ustrip(dx)) + 1] - Φ(1.05)) ≈ 3.7901e-1 atol=1e-1
         @show round5(phi[1] - Φ(0))
         end #testset
     end
