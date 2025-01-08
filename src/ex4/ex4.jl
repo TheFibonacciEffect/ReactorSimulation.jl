@@ -258,7 +258,7 @@ function reactor_with_reflector(dx, assemblies, half_core; optimization = false,
         plot!(p2,x, νΣf_f_array,label="νΣfission for fast neutrons", legend=:bottomleft, color=:red, linestyle=:dash)
         plot!(p2,x, νΣf_s_array,label="νΣfission for slow neutrons", legend=:bottomleft, color=:green, linestyle=:dash)
         xlims!(0,140)
-        savefig("docs/figs/ex4/neutrons_core_$i.png")
+        println(savefig("docs/figs/ex4/neutrons_core_$i.png"))
         println("saved docs/figs/ex4/neutrons_core_$i.png")
     end
 end

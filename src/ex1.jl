@@ -136,12 +136,12 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
     if do_plot
         p_ana =  plot(Φ,x, xlabel="l", ylabel="Neutron Flux Density", title="Analytical Solution", legend=false)
         p_num = plot(x ,phi, legend=false, title="Numerical Solution")
-        if save savefig("docs/figs/ex1/ex1_analytical.png") end
+        if save println(savefig("docs/figs/ex1/ex1_analytical.png")) end
         p_err = plot(x ,phi .- Φ.(x), legend=false)
         xlabel!("l")
         ylabel!("Error")
         title!("Difference between Numerical and Analytical Solution")
-        if save savefig("docs/figs/ex1/ex1_err_$(n).png") end
+        if save println(savefig("docs/figs/ex1/ex1_err_$(n).png")) end
         p_rel = plot(x ,(phi .- Φ.(x)) ./ Φ.(x), legend=false)
         xlabel!("l")
         ylabel!("Relative Error")
