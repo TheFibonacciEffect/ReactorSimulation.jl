@@ -154,7 +154,7 @@ function slab_reactor(n; save = false, do_plot=false, verbose=false, max=false, 
 end
 
 function plot_error(n)
-    err = slab_reactor.(n; save = false)./n
+    err = slab_reactor.(n; save = false)
     ps = plot(n,err, ylabel="error at x0", xlabel="number of grid points", yscale=:log10, xscale=:log10, marker=:o)
     println(savefig("./docs/figs/ex1/err_x0.png"))
     err = slab_reactor.(n; save = false, max=true)
